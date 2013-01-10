@@ -1,0 +1,10 @@
+name = Biogeog Data Portal
+description = CEC data portal for Biogeog website
+core = 7.x
+version = 7.x-1.0
+stylesheets[all][]  = css/cec-data-portal.css
+scripts[] = js/app.settings.js
+scripts[] = js/Model.js
+scripts[] = js/View.js
+scripts[] = js/Controller.js
+scripts[] = js/app.js

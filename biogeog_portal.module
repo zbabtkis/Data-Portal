@@ -1,0 +1,42 @@
+<?php
+
+function biogeog_portal_menu() {
+	$items = array();
+	$items['data/cec/portal'] = array(
+		'title' => 'CEC Data Portal',
+		'description' => t('Web portal for the CEC data collection'),
+		'page callback' => 'biogeog_portal_page_gen',
+		'access arguments' => array('access data portal'),
+	  'type' => MENU_NORMAL_ITEM);
+	return($items);
+}
+function biogeog_portal_page_gen() {
+	$cec_data = array();
+	$data_paths = glob('/home/maxent/*');
+	
+	foreach($data_paths as $path) {
+		 preg_match('/\/home\/maxent\/(.*)/',$path, $filename);
+		 $data_filenames[] = $filename[1];
+	}
+	for($i = 0, $l = count($data_paths); $i < $l; $i++) {
+		$cec_data[] = array('path' => $data_paths[$i], 'file_loc' => $data_filenames[$i]);
+	}
+	drupal_add_js(array('cec-data' => $cec_data, 'module_path'=> '/' . drupal_get_path('module','biogeog_portal') . '/inc/refreshLocation.php'), 'setting');
+	$page = theme('biogeog_portal_template');
+	return($page);
+}
+function biogeog_portal_permission() {
+	$items = array();
+	$items['access data portal'] = array(
+		'title' => 'Access Data Portal Content',
+		'description' => t('Access content from the biogeog data portal'));
+	return($items);
+}
+function biogeog_portal_theme() {
+	$themes = array(
+		'biogeog_portal_template' => array(
+			'template' => 'biogeog_portal_template',
+		),
+	);
+	return($themes);
+}
