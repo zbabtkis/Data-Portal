@@ -12,16 +12,16 @@ function biogeog_portal_menu() {
 }
 function biogeog_portal_page_gen() {
 	$cec_data = array();
-	$data_paths = glob('/home/maxent/*');
-	
+	$data_paths = scandir('/home/maxent');
 	foreach($data_paths as $path) {
-		 preg_match('/\/home\/maxent\/(.*)/',$path, $filename);
-		 $data_filenames[] = $filename[1];
+		if(ltrim($path,'.')) {
+			$data_filenames[] = $path;
+		}
 	}
-	for($i = 0, $l = count($data_paths); $i < $l; $i++) {
-		$cec_data[] = array('path' => $data_paths[$i], 'file_loc' => $data_filenames[$i]);
+	for($i = 0, $l = count($data_filenames); $i < $l; $i++) {
+		$cec_data[] = array('file_loc' => $data_filenames[$i]);
 	}
-	drupal_add_js(array('cec-data' => $cec_data, 'module_path'=> '/' . drupal_get_path('module','biogeog_portal') . '/inc/refreshLocation.php'), 'setting');
+	drupal_add_js(array('data-path' => $data_filenames, 'cec-data' => $cec_data, 'module_path'=> '/' . drupal_get_path('module','biogeog_portal') . '/inc/refreshLocation.php'), 'setting');
 	$page = theme('biogeog_portal_template');
 	return($page);
 }
