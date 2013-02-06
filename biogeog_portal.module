@@ -62,7 +62,7 @@ function biogoeg_portal_run_db_up() {
 				// Creates array of data for insertion into db.
 				$data[$key][$dir] = array('name'=>$dir, 'id'=> $id, 'pid'=>$pid);
 				// Inserts data into database.
-				db_insert('biogeog_portal_data')->fields(array('title' => $dir, 'pid' => $pid, 'id' => $id))->execute();
+				db_insert('biogeog_portal_data')->fields(array('title' => $dir, 'pid' => $pid, 'id' => $id, 'path' => implode('/', $line)))->execute();
 			}
 			$last_dir = $dir;
 		}
@@ -70,6 +70,7 @@ function biogoeg_portal_run_db_up() {
 }
 
 function biogeog_portal_page_gen() {
+	$module_path = '/' . drupal_get_path('module', 'biogeog_portal') . '/';
 	// Select biogeog data portal db containing directory heirarchy.
 	$query = db_select('biogeog_portal_data','d');
 	// Ged file id, file's parent id and title of the file.
@@ -79,10 +80,17 @@ function biogeog_portal_page_gen() {
 	$results = $query->execute();
 	$data = array();
 	while($record = $results->fetchAssoc()) {
+		$fileType = preg_match('/^.*\.(.*?)$/i', $record['title'], $ft);
+		if(!isset($ft[1])) {
+			$type = 'directory';
+		} else {
+			$type = 'file';
+		}
+		$record['type'] = $type;
         $data[] = $record;
     }
     // Send current filesystem level objects to app Model.
-	drupal_add_js(array('cec-data' => $data), 'setting');
+	drupal_add_js(array('cec-data' => $data, 'path' => $module_path), 'setting');
 	// Render web app using theme template
 	$page = theme('biogeog_portal_template');
 	return($page);

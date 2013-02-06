@@ -1,9 +1,10 @@
+"use strict";
+
 var DataModel = Backbone.Model.extend({
 		initialize: function() {
-			this.data = Drupal.settings['cec-data'];
-			this.parent = '/home/maxent'
 			this.displayPath = [''];
 			this.dirs = [];
+			this.file = new File();
 		},
 		updatePath: function(path) {
 			var curr_dir = path.substr(path.lastIndexOf('/') + 1);
@@ -41,4 +42,26 @@ var DataModel = Backbone.Model.extend({
 				dir = data_cp[object]['title'];
 			}
 		},
+		changeDir: function(id) {
+			var url = Drupal.settings.path + 'inc/changeDir.php';
+			var self = this;
+			jQuery.ajax({
+				'url' : url,
+				'data' : {dir_id: id},
+				'dataType': 'json',
+				'success' : function(data) {
+					self.set({'data': data});
+				},
+				fail: function(e) {
+					console.log(e);
+				}
+			});
+		},
+		loadFile: function(id) {
+			var currentFile = this.attributes.data[id];
+			this.file.set({'file': currentFile.title, 'type': currentFile.type, 'path': Drupal.settings.path + 'inc/imageGet.php?id=' + currentFile.id});
+		},
+});
+
+var File = Backbone.Model.extend({
 });

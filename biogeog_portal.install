@@ -5,7 +5,8 @@ function biogeog_portal_schema() {
 		'fields' => array(
 			'id' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
 			'pid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-			'title' => array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => '')),
+			'title' => array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => ''),
+			'path' => array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => '')),
 		'primary_key' => array('id'),
 		'indexes' => array(
 			'id' => array('id')));
