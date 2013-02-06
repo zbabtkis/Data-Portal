@@ -38,15 +38,7 @@ var DataModel = Backbone.Model.extend({
 			this.dirs = [];
 			for(object in this.data) {
 				var data_cp = this.data;
-				dir = data_cp[object]['file_loc'].split('/');
-				if(jQuery.isArray(dir) && dir.length != 1) {
-					this.dirs.push(dir[dir.length -1 ]);
-				} else {
-					this.dirs.push(dir);
-				}
-				if(this.dirs[0] == null) {
-					dirs = this.data;
-				}
+				dir = data_cp[object]['title'];
 			}
 		},
 });

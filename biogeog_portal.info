@@ -11,3 +11,5 @@ scripts[] = js/Model.js
 scripts[] = js/View.js
 scripts[] = js/Controller.js
 scripts[] = js/app.js
+
+configure = admin/config/cec-data-portal

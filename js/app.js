@@ -8,6 +8,7 @@
 	
 	Drupal.behaviors.biogeog_portal = {
 		attach: function() {
+			console.log(Drupal.settings);
 			cecDataModel = new DataModel();
 			cecDataPage = new Page();
 			cecDataController = new PageController();

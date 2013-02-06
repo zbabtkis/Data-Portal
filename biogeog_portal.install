@@ -1,0 +1,14 @@
+<?php
+
+function biogeog_portal_schema() {
+	$schema['biogeog_portal_data'] = array(
+		'fields' => array(
+			'id' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+			'pid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+			'title' => array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => '')),
+		'primary_key' => array('id'),
+		'indexes' => array(
+			'id' => array('id')));
+
+	return($schema);
+}

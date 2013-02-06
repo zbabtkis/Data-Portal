@@ -8,20 +8,82 @@ function biogeog_portal_menu() {
 		'page callback' => 'biogeog_portal_page_gen',
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
+	$items['admin/config/cec-data-portal'] = array(
+		'title' => 'CEC Data Portal Settings',
+		'description' => t('Configuration for the CEC data portal module'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('biogeog_portal_config'),
+		'access arguments' => array('access data portal'),
+	  'type' => MENU_NORMAL_ITEM);
 	return($items);
 }
-function biogeog_portal_page_gen() {
-	$cec_data = array();
-	$data_paths = scandir('/home/maxent');
-	foreach($data_paths as $path) {
-		if(ltrim($path,'.')) {
-			$data_filenames[] = $path;
+
+function biogeog_portal_config() {
+	$form = array();
+
+	$form['run_cec_data_up'] = array(
+		'#type' => 'submit',
+		'#value' => 'Run CEC Data Update',
+		'#submit' => array('biogoeg_portal_run_db_up'));
+	return($form);
+}
+
+function biogoeg_portal_run_db_up() {
+	ini_set('max_execution_time', 99999999999999);
+	$f = fopen(drupal_get_path('module', 'biogeog_portal') . '/biogeog_dir_db.csv', 'r');
+	$id = 0;
+	// Holds dir name to check if name already exists in data structure.
+	$struct = array();
+	// Holds full data set including id, pid and dir name.
+	$data = array();
+	$last_dir = null;
+	db_delete('biogeog_portal_data')->execute();
+	// Gets each file and directory in the current path split by '/'.
+	while(($line = fgetcsv($f, 4000, '/')) != FALSE) {
+		// First assume directory/file's parent id is 0.
+		$pid = 0;
+		// For every directory/file name in the path with the key value as its directory level.
+		foreach($line as $key=>$dir) {
+			// Should only add entry if the files at that directory level don't exist yet or if the directory value already exists at that level.
+			if(!isset($struct[$key]) || !in_array($dir, $struct[$key])) {
+				// Make the new file/directories id one more.
+				$id++;
+				// Verifies that the level is not first level and does have a parent.
+				if($key != 0) {
+					// Set parent id equal to the id of the parent directory.
+					$pid = $data[$key-1][$last_dir]['id'];
+				}
+				else {
+					// The pid is irrelevant and should be treated as 0.
+					$pid = 0;
+				}
+				// Adds the directory name to the filesystem structure.
+				$struct[$key][$dir] = $dir;
+				// Creates array of data for insertion into db.
+				$data[$key][$dir] = array('name'=>$dir, 'id'=> $id, 'pid'=>$pid);
+				// Inserts data into database.
+				db_insert('biogeog_portal_data')->fields(array('title' => $dir, 'pid' => $pid, 'id' => $id))->execute();
+			}
+			$last_dir = $dir;
 		}
 	}
-	for($i = 0, $l = count($data_filenames); $i < $l; $i++) {
-		$cec_data[] = array('file_loc' => $data_filenames[$i]);
-	}
-	drupal_add_js(array('data-path' => $data_filenames, 'cec-data' => $cec_data, 'module_path'=> '/' . drupal_get_path('module','biogeog_portal') . '/inc/refreshLocation.php'), 'setting');
+}
+
+function biogeog_portal_page_gen() {
+	// Select biogeog data portal db containing directory heirarchy.
+	$query = db_select('biogeog_portal_data','d');
+	// Ged file id, file's parent id and title of the file.
+	$query->fields('d',array('id','pid','title'))
+	// On first view, we will show directories starting at level 4.
+		  ->condition('pid',4,'=');
+	$results = $query->execute();
+	$data = array();
+	while($record = $results->fetchAssoc()) {
+        $data[] = $record;
+    }
+    // Send current filesystem level objects to app Model.
+	drupal_add_js(array('cec-data' => $data), 'setting');
+	// Render web app using theme template
 	$page = theme('biogeog_portal_template');
 	return($page);
 }
