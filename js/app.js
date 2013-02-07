@@ -10,7 +10,7 @@
 		routes: {
 			'':'index',
 			'data/:dirid':'data',
-			'data/:dirid/load/:fileid': 'file',
+			'data/:dirid/load/:filetype/:filetitle/:fileid': 'file',
 		},
 		index: function() {
 			this.model.changeDir(3);
@@ -18,11 +18,11 @@
 		data: function(dirId) {
 			this.model.changeDir(dirId);
 		},
-		file: function(dirId,fileId) {
+		file: function(dirId,fileType,fileTitle,fileId) {
 			var self = this;
 			this.model.changeDir(dirId);
 			this.model.on('change', function() {
-				self.model.loadFile(fileId);
+				self.model.loadFile(fileId, fileTitle, fileType);
 			});
 		},
 		addListeners: function() {
@@ -31,7 +31,7 @@
 				self.navigate('data/' + fileDataset.fileId, {trigger: true});
 			});
 			this.view.dataList.on('fileClicked', function(fileDataset) {
-				self.navigate('data/' + fileDataset.parentId + '/load/' + fileDataset.fileId, {trigger: true});
+				self.navigate('data/' + fileDataset.parentId + '/load/' + fileDataset.fileType + '/' + fileDataset.fileTitle + '/' + fileDataset.fileId, {trigger: true});
 			})
 			this.model.on('change', function() {
 				console.log('new data has been loaded');

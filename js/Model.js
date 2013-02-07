@@ -21,9 +21,8 @@ var DataModel = Backbone.Model.extend({
 				}
 			});
 		},
-		loadFile: function(id) {
-			var currentFile = this.attributes.data[id];
-			this.file.set({'file': currentFile.title, 'type': currentFile.type, 'path': Drupal.settings.menu + '/image-get/' + currentFile.id});
+		loadFile: function(id, title, type) {
+			this.file.set({'file': title, 'type': type, 'path': Drupal.settings.menu + '/image-get/' + id});
 		},
 });
 

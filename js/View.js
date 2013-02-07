@@ -79,6 +79,7 @@ var DataListItem = Backbone.View.extend({
 			'data-parent-id':this.options.pid,
 			'data-file-id':this.options.fileId,
 			'data-file-type':this.options.type,
+			'data-file-title':this.options.title,
 		};
 	},
 	initialize: function() {
