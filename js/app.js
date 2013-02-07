@@ -43,10 +43,10 @@
 				self.view.dataDisplay.fileCheck(self.model.file);
 			});
 			this.view.on('dirUpRequested', function() {
-				if(!self.model.currPathId) {
-					self.model.currPathId = 0;
+				if(!self.model.parentId) {
+					self.model.parentId = 3;
 				}
-				self.model.changeDir(self.model.currPathId, 'parent');
+				self.model.changeDir(self.model.parentId);
 			})
 		},
 	});

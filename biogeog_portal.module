@@ -86,25 +86,19 @@ function biogoeg_portal_run_db_up() {
 	}
 }
 
-function biogeog_portal_ajax_page($dir_id, $find) {
-	if(isset($dir_id)) {
-		$find_col = 'pid';
-		if(isset($find)) {
-			if($find == 'children') {
-				$find_col = 'pid';
-			} elseif ($find == 'parent') {
-				$find_col = 'id';
-			}
-		} else {
-			$find_col = 'pid';
-		}
-		$query = db_select('biogeog_portal_data','d');
-		// Ged file id, file's parent id and title of the file.
-		$query->fields('d',array('id','pid','title','path'))
-		// On first view, we will show directories starting at level 4.
-			  ->condition($find_col,$dir_id,'=');
-		$results = $query->execute();
+function biogeog_portal_pull_dirs($dir_id, $find_col) {
+	$query = db_select('biogeog_portal_data','d');
+	// Ged file id, file's parent id and title of the file.
+	$query->fields('d',array('id','pid','title','path'))
+	// On first view, we will show directories starting at level 4.
+		  ->condition($find_col,$dir_id,'=');
+	$results = $query->execute();
+	return $results;
+}
 
+function biogeog_portal_ajax_page($dir_id) {
+	if(isset($dir_id)) {
+		$results = biogeog_portal_pull_dirs($dir_id, 'pid');
 		$data = array();
 		while($record = $results->fetchAssoc()) {
 			$fileType = preg_match('/^.*\.(.*?)$/i', $record['title'], $ft);
@@ -116,6 +110,10 @@ function biogeog_portal_ajax_page($dir_id, $find) {
 			$record['type'] = $type;
 		    $data['items'][] = $record;
 		}
+		$fullList = biogeog_portal_pull_dirs($data['items'][0]['pid'], 'id');
+		while($r = $fullList->fetchAssoc()) {
+		    $data['pid'] = $r['pid'];
+		}
 
 		$pathQuery = db_select('biogeog_portal_data','d');
 		$pathQuery->fields('d',array('id','path'))
@@ -125,7 +123,7 @@ function biogeog_portal_ajax_page($dir_id, $find) {
 
 		$path = null;
 		while($r = $pathResult->fetchAssoc()) {
-			$data['path'] = $r['path'].split('/');
+			$data['path'] = $r['path'];
 		}
 
 		// Send current filesystem level objects to app Model.

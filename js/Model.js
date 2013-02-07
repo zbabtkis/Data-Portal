@@ -5,10 +5,8 @@ var DataModel = Backbone.Model.extend({
 			this.displayPath = [''];
 			this.file = new File();
 		},
-		changeDir: function(id, find) {
-			find = find || 'children';
-			this.currPathId = id;
-			var url = '/' + Drupal.settings.menu + '/update/' + id + '/' + find;
+		changeDir: function(id) {
+			var url = '/' + Drupal.settings.menu + '/update/' + id;
 			var self = this;
 			jQuery.ajax({
 				'url' : url,
@@ -16,6 +14,7 @@ var DataModel = Backbone.Model.extend({
 				'success' : function(data) {
 					self.path = data.path;
 					self.set({'data': data.items});
+					self.parentId = data.pid;
 				},
 				fail: function(e) {
 					console.log(e);
