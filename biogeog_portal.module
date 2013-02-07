@@ -22,11 +22,11 @@ function biogeog_portal_menu() {
 		'page arguments' => array(4),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
-	$items['data/cec/portal/get-image/%/%'] = array(
+	$items['data/cec/portal/get-image/%'] = array(
 		'title' => 'CEC Data Portal Get Image',
 		'description' => t('Configuration for the CEC data portal module'),
 		'page callback' => 'biogeog_portal_get_image',
-		'page arguments' => array(4, 5),
+		'page arguments' => array(4),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
 	return($items);
