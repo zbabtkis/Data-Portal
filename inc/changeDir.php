@@ -1,8 +1,6 @@
 <?php
-/** bootstrap drupal **/
-define("DRUPAL_ROOT", "/var/www/vhosts/biogeog.ucsb.edu");
-require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
-drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
+include('config.php');
 
 if(isset($_GET['dir_id'])) {
 	$dir_id = $_GET['dir_id'];

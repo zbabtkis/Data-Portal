@@ -15,6 +15,20 @@ function biogeog_portal_menu() {
 		'page arguments' => array('biogeog_portal_config'),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
+	$items['data/cec/portal/update/%'] = array(
+		'title' => 'CEC Data Portal Get Image',
+		'description' => t('Configuration for the CEC data portal module'),
+		'page callback' => 'biogeog_portal_ajax_page',
+		'page arguments' => array(4),
+		'access arguments' => array('access data portal'),
+	  'type' => MENU_NORMAL_ITEM);
+	$items['data/cec/portal/get-image/%/%'] = array(
+		'title' => 'CEC Data Portal Get Image',
+		'description' => t('Configuration for the CEC data portal module'),
+		'page callback' => 'biogeog_portal_get_image',
+		'page arguments' => array(4, 5),
+		'access arguments' => array('access data portal'),
+	  'type' => MENU_NORMAL_ITEM);
 	return($items);
 }
 
@@ -37,6 +51,7 @@ function biogoeg_portal_run_db_up() {
 	// Holds full data set including id, pid and dir name.
 	$data = array();
 	$last_dir = null;
+	$cwd = null;
 	db_delete('biogeog_portal_data')->execute();
 	// Gets each file and directory in the current path split by '/'.
 	while(($line = fgetcsv($f, 4000, '/')) != FALSE) {
@@ -48,6 +63,7 @@ function biogoeg_portal_run_db_up() {
 			if(!isset($struct[$key]) || !in_array($dir, $struct[$key])) {
 				// Make the new file/directories id one more.
 				$id++;
+				$cwd[] = $dir;
 				// Verifies that the level is not first level and does have a parent.
 				if($key != 0) {
 					// Set parent id equal to the id of the parent directory.
@@ -62,10 +78,79 @@ function biogoeg_portal_run_db_up() {
 				// Creates array of data for insertion into db.
 				$data[$key][$dir] = array('name'=>$dir, 'id'=> $id, 'pid'=>$pid);
 				// Inserts data into database.
-				db_insert('biogeog_portal_data')->fields(array('title' => $dir, 'pid' => $pid, 'id' => $id, 'path' => implode('/', $line)))->execute();
+				db_insert('biogeog_portal_data')->fields(array('title' => $dir, 'pid' => $pid, 'id' => $id, 'path' => implode('/', $cwd)))->execute();
 			}
 			$last_dir = $dir;
 		}
+		$cwd = null;
+	}
+}
+
+function biogeog_portal_ajax_page($dir_id, $find) {
+	if(isset($dir_id)) {
+		$find_col = 'pid';
+		if(isset($find)) {
+			if($find == 'children') {
+				$find_col = 'pid';
+			} elseif ($find == 'parent') {
+				$find_col = 'id';
+			}
+		} else {
+			$find_col = 'pid';
+		}
+		$query = db_select('biogeog_portal_data','d');
+		// Ged file id, file's parent id and title of the file.
+		$query->fields('d',array('id','pid','title','path'))
+		// On first view, we will show directories starting at level 4.
+			  ->condition($find_col,$dir_id,'=');
+		$results = $query->execute();
+
+		$data = array();
+		while($record = $results->fetchAssoc()) {
+			$fileType = preg_match('/^.*\.(.*?)$/i', $record['title'], $ft);
+			if(!isset($ft[1])) {
+				$type = 'directory';
+			} else {
+				$type = 'file';
+			}
+			$record['type'] = $type;
+		    $data['items'][] = $record;
+		}
+
+		$pathQuery = db_select('biogeog_portal_data','d');
+		$pathQuery->fields('d',array('id','path'))
+		// On first view, we will show directories starting at level 4.
+			  ->condition('id',$dir_id,'=');
+		$pathResult = $pathQuery->execute();
+
+		$path = null;
+		while($r = $pathResult->fetchAssoc()) {
+			$data['path'] = $r['path'].split('/');
+		}
+
+		// Send current filesystem level objects to app Model.
+		print(json_encode($data));
+	} else {
+		print("You haven't requested a directory id");
+	}
+}
+
+function biogeog_portal_get_image($id) {
+	if(isset($id)) {
+		$query = db_select('biogeog_portal_data','d');
+		// Ged file id, file's parent id and title of the file.
+		$query->fields('d',array('id','path'))
+		// On first view, we will show directories starting at level 4.
+			  ->condition('id',$id,'=');
+		$results = $query->execute();
+
+		$data = array();
+		while($record = $results->fetchAssoc()) {
+			header('Content-Disposition: image/tiff; filename="'.$record['title'].'"');
+		    print(readfile($record['path']));
+		}
+	} else {
+		print("You haven't requested a directory id");
 	}
 }
 
@@ -90,7 +175,7 @@ function biogeog_portal_page_gen() {
         $data[] = $record;
     }
     // Send current filesystem level objects to app Model.
-	drupal_add_js(array('cec-data' => $data, 'path' => $module_path), 'setting');
+	drupal_add_js(array('cec-data' => $data, 'path' => $module_path, 'menu' => $_GET['q']), 'setting');
 	// Render web app using theme template
 	$page = theme('biogeog_portal_template');
 	return($page);

@@ -13,7 +13,8 @@
 			'data/:dirid/load/:fileid': 'file',
 		},
 		index: function() {
-			this.model.changeDir(4);
+			this.model.changeDir(3);
+			console.log(this.model);
 		},
 		data: function(dirId) {
 			this.model.changeDir(dirId);
@@ -36,10 +37,17 @@
 			this.model.on('change', function() {
 				console.log('new data has been loaded');
 				self.view.buildPage(self.model);
+				self.view.currentPath.setDataPath(self.model.path);
 			});
 			this.model.file.on('change', function() {
 				self.view.dataDisplay.fileCheck(self.model.file);
 			});
+			this.view.on('dirUpRequested', function() {
+				if(!self.model.currPathId) {
+					self.model.currPathId = 0;
+				}
+				self.model.changeDir(self.model.currPathId, 'parent');
+			})
 		},
 	});
 	Drupal.behaviors.biogeog_portal = {

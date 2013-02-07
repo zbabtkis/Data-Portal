@@ -29,6 +29,8 @@
 	color: white;
 	list-style: none;
 	padding: 0;
+	overflow: scroll;
+	height: 600px;
 }
 #cec-data-list li {
 	padding: 10px;
@@ -67,7 +69,7 @@
 	background-color: #047D76 !important;
 }
 .overlay {  
-    position:absolute;
+    position:fixed;
     top:0;
     left:0;
     width:100%;

@@ -9,9 +9,7 @@ var View = Backbone.View.extend({
 		this.screenToggle = new ScreenToggle();
 	},
 	buildPage: function(model) {
-		//cecDataModel.setDirs();
 		this.dataList.$el.html('');
-		//this.currentPath.$el.html(cecDataModel.displayPath.join('/'));
 		var data = model.attributes.data;
 		this.dataList.loadFiles(data);
 	},
@@ -34,9 +32,13 @@ var View = Backbone.View.extend({
 				jQuery('#cec-portal-small-screen').attr('alt','Exit Full Screen');
 		});
 	},
+	directoryUp: function() {
+		this.trigger('dirUpRequested');
+	},
 	events: {
 		'click #cec-portal-full-screen':'toggleFullScreen',
 		'click #cec-portal-small-screen':'toggleSmallScreen',
+		'click .cec-button.back':'directoryUp',
 	}
 });
 
@@ -46,7 +48,7 @@ var DataList = Backbone.View.extend({
 	},
 	loadFiles: function(data) {
 		for( var object in data ) {
-			var row;
+			var row = 1;
 			if( object % 2 == 0 ) {
 				row = 'row-even';
 			} else {
@@ -89,8 +91,8 @@ var PathDisplay = Backbone.View.extend({
 	initialize: function() {
 		this.$el = jQuery('#data-path');
 	},
-	setDataPath: function() {
-
+	setDataPath: function(path) {
+		this.$el.html(path);
 	}
 });
 
