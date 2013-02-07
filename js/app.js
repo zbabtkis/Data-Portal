@@ -14,7 +14,6 @@
 		},
 		index: function() {
 			this.model.changeDir(3);
-			console.log(this.model);
 		},
 		data: function(dirId) {
 			this.model.changeDir(dirId);
@@ -43,10 +42,7 @@
 				self.view.dataDisplay.fileCheck(self.model.file);
 			});
 			this.view.on('dirUpRequested', function() {
-				if(!self.model.parentId) {
-					self.model.parentId = 3;
-				}
-				self.model.changeDir(self.model.parentId);
+				self.navigate('data/' + self.model.parentId ,{trigger: true});
 			})
 		},
 	});
