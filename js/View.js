@@ -64,9 +64,9 @@ var DataList = Backbone.View.extend({
 	goToData: function(element) {
 		var dataset = element.currentTarget.dataset;
 		if(dataset.fileType === 'directory') {
-			this.trigger('dirClicked', dataset);
+			this.trigger('dirClicked', dataset, element.currentTarget);
 		} else {
-			this.trigger('fileClicked', dataset);
+			this.trigger('fileClicked', dataset, element.currentTarget);
 		}
 	}
 });
@@ -93,7 +93,7 @@ var PathDisplay = Backbone.View.extend({
 		this.$el = jQuery('#data-path');
 	},
 	setDataPath: function(path) {
-		this.$el.html(path);
+		this.$el.html(path.join('/'));
 	}
 });
 

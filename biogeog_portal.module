@@ -26,7 +26,7 @@ function biogeog_portal_menu() {
 		'title' => 'CEC Data Portal Get Image',
 		'description' => t('Configuration for the CEC data portal module'),
 		'page callback' => 'biogeog_portal_get_image',
-		'page arguments' => array(4),
+		'page arguments' => array(5),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
 	return($items);
@@ -56,29 +56,31 @@ function biogoeg_portal_run_db_up() {
 	// Gets each file and directory in the current path split by '/'.
 	while(($line = fgetcsv($f, 4000, '/')) != FALSE) {
 		// First assume directory/file's parent id is 0.
-		$pid = 0;
+		$pid = array(0,0);
 		// For every directory/file name in the path with the key value as its directory level.
 		foreach($line as $key=>$dir) {
+			$cwd[] = $dir;
 			// Should only add entry if the files at that directory level don't exist yet or if the directory value already exists at that level.
 			if(!isset($struct[$key]) || !in_array($dir, $struct[$key])) {
 				// Make the new file/directories id one more.
 				$id++;
-				$cwd[] = $dir;
+				$path = implode('/', $cwd);
 				// Verifies that the level is not first level and does have a parent.
 				if($key != 0) {
 					// Set parent id equal to the id of the parent directory.
-					$pid = $data[$key-1][$last_dir]['id'];
+					$pid[0] = $data[$key-1][$last_dir]['pid'];
+					$pid[1] = $data[$key-1][$last_dir]['id'];
 				}
 				else {
 					// The pid is irrelevant and should be treated as 0.
-					$pid = 0;
+					$pid = array(0,0);
 				}
 				// Adds the directory name to the filesystem structure.
 				$struct[$key][$dir] = $dir;
 				// Creates array of data for insertion into db.
-				$data[$key][$dir] = array('name'=>$dir, 'id'=> $id, 'pid'=>$pid);
+				$data[$key][$dir] = array('name'=>$dir, 'id'=> $id, 'pid'=>$pid[1], 'ppid'=> $pid[0]);
 				// Inserts data into database.
-				db_insert('biogeog_portal_data')->fields(array('title' => $dir, 'pid' => $pid, 'id' => $id, 'path' => implode('/', $cwd)))->execute();
+				db_insert('biogeog_portal_data')->fields(array('title' => $dir, 'pid' => $pid[1], 'ppid'=> $pid[0], 'id' => $id, 'path' => $path))->execute();
 			}
 			$last_dir = $dir;
 		}
@@ -89,7 +91,7 @@ function biogoeg_portal_run_db_up() {
 function biogeog_portal_pull_dirs($dir_id, $find_col) {
 	$query = db_select('biogeog_portal_data','d');
 	// Ged file id, file's parent id and title of the file.
-	$query->fields('d',array('id','pid','title','path'))
+	$query->fields('d',array('id','pid','ppid','title','path'))
 	// On first view, we will show directories starting at level 4.
 		  ->condition($find_col,$dir_id,'=');
 	$results = $query->execute();
@@ -109,10 +111,8 @@ function biogeog_portal_ajax_page($dir_id) {
 			}
 			$record['type'] = $type;
 		    $data['items'][] = $record;
-		}
-		$fullList = biogeog_portal_pull_dirs($data['items'][0]['pid'], 'id');
-		while($r = $fullList->fetchAssoc()) {
-		    $data['pid'] = $r['pid'];
+		    $data['pid'] = $record['pid'];
+		    $data['ppid'] = $record['ppid'];
 		}
 
 		$pathResult = biogeog_portal_pull_dirs($dir_id, 'id');

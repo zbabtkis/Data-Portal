@@ -27,23 +27,28 @@
 		},
 		addListeners: function() {
 			var self = this;
-			this.view.dataList.on('dirClicked', function(fileDataset) {
+			this.view.dataList.on('dirClicked', function(fileDataset, currentTarget) {
+				self.model.set('lastClicked', currentTarget)
 				self.navigate('data/' + fileDataset.fileId, {trigger: true});
 			});
 			this.view.dataList.on('fileClicked', function(fileDataset) {
 				self.navigate('data/' + fileDataset.parentId + '/load/' + fileDataset.fileType + '/' + fileDataset.fileTitle + '/' + fileDataset.fileId, {trigger: true});
-			})
+			});
 			this.model.on('change', function() {
 				console.log('new data has been loaded');
 				self.view.buildPage(self.model);
-				self.view.currentPath.setDataPath(self.model.path);
+				self.view.currentPath.setDataPath(self.model.get('path'));
+			});
+			this.listenTo(this.model, 'error',function(model, error) {
+				console.log(self.model.get('lastClicked'));
+				self.navigate('data/' + self.model.get('pid'), {trigger: true});
 			});
 			this.model.file.on('change', function() {
 				self.view.dataDisplay.fileCheck(self.model.file);
 			});
 			this.view.on('dirUpRequested', function() {
-				self.navigate('data/' + self.model.parentId ,{trigger: true});
-			})
+				self.navigate('data/' + self.model.get('ppid') ,{trigger: true});
+			});
 		},
 	});
 	Drupal.behaviors.biogeog_portal = {
