@@ -26,7 +26,14 @@ function biogeog_portal_menu() {
 		'title' => 'CEC Data Portal Get Image',
 		'description' => t('Configuration for the CEC data portal module'),
 		'page callback' => 'biogeog_portal_get_image',
-		'page arguments' => array(5),
+		'page arguments' => array(4),
+		'access arguments' => array('access data portal'),
+	  'type' => MENU_NORMAL_ITEM);
+	$items['data/cec/portal/get-text/%'] = array(
+		'title' => 'CEC Data Portal Get Image',
+		'description' => t('Configuration for the CEC data portal module'),
+		'page callback' => 'biogeog_portal_get_text',
+		'page arguments' => array(4),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
 	return($items);
@@ -107,7 +114,7 @@ function biogeog_portal_ajax_page($dir_id) {
 			if(!isset($ft[1])) {
 				$type = 'directory';
 			} else {
-				$type = 'file';
+				$type = $ft[1];
 			}
 			$record['type'] = $type;
 		    $data['items'][] = $record;
@@ -132,14 +139,32 @@ function biogeog_portal_get_image($id) {
 	if(isset($id)) {
 		$query = db_select('biogeog_portal_data','d');
 		// Ged file id, file's parent id and title of the file.
-		$query->fields('d',array('id','path'))
+		$query->fields('d',array('id','path','title'))
 		// On first view, we will show directories starting at level 4.
 			  ->condition('id',$id,'=');
 		$results = $query->execute();
 
 		$data = array();
 		while($record = $results->fetchAssoc()) {
-			header('Content-Disposition: image/tiff; filename="'.$record['title'].'"');
+			header('Content-Disposition: application; filename="'.$record['title'].'"');
+		    print(readfile($record['path']));
+		}
+	} else {
+		print("You haven't requested a directory id");
+	}
+}
+
+function biogeog_portal_get_text($id) {
+	if(isset($id)) {
+		$query = db_select('biogeog_portal_data','d');
+		// Ged file id, file's parent id and title of the file.
+		$query->fields('d',array('id','path','title'))
+		// On first view, we will show directories starting at level 4.
+			  ->condition('id',$id,'=');
+		$results = $query->execute();
+
+		$data = array();
+		while($record = $results->fetchAssoc()) {
 		    print(readfile($record['path']));
 		}
 	} else {
@@ -167,6 +192,17 @@ function biogeog_portal_page_gen() {
 		$record['type'] = $type;
         $data[] = $record;
     }
+    drupal_add_library('system', 'ui.draggable');
+    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/lib/handlebars.js');
+    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/lib/underscore-min.js');
+    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/lib/backbone-min.js');
+    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/lib/antiscroll.js');
+    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/app.settings.js');
+    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/Model.js');
+    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/View.js');
+    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/Controller.js');
+    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/app.js');
+
     // Send current filesystem level objects to app Model.
 	drupal_add_js(array('cec-data' => $data, 'path' => $module_path, 'menu' => $_GET['q']), 'setting');
 	// Render web app using theme template

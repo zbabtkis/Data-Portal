@@ -1,60 +1,11 @@
-"use strict";
+var cecPortal = window.cecPortal || (window.cecPortal = {});
 
 (function ($) {
-	var App = Backbone.Router.extend({
-		initialize: function() {
-			this.view = new View();
-			this.model = new DataModel();
-			this.addListeners();
-		},
-		routes: {
-			'':'index',
-			'data/:dirid':'data',
-			'data/:dirid/load/:filetype/:filetitle/:fileid': 'file',
-		},
-		index: function() {
-			this.model.changeDir(3);
-		},
-		data: function(dirId) {
-			this.model.changeDir(dirId);
-		},
-		file: function(dirId,fileType,fileTitle,fileId) {
-			var self = this;
-			this.model.changeDir(dirId);
-			this.model.on('change', function() {
-				self.model.loadFile(fileId, fileTitle, fileType);
-			});
-		},
-		addListeners: function() {
-			var self = this;
-			this.view.dataList.on('dirClicked', function(fileDataset, currentTarget) {
-				self.model.set('lastClicked', currentTarget)
-				self.navigate('data/' + fileDataset.fileId, {trigger: true});
-			});
-			this.view.dataList.on('fileClicked', function(fileDataset) {
-				self.navigate('data/' + fileDataset.parentId + '/load/' + fileDataset.fileType + '/' + fileDataset.fileTitle + '/' + fileDataset.fileId, {trigger: true});
-			});
-			this.model.on('change', function() {
-				console.log('new data has been loaded');
-				self.view.buildPage(self.model);
-				self.view.currentPath.setDataPath(self.model.get('path'));
-			});
-			this.listenTo(this.model, 'error',function(model, error) {
-				console.log(self.model.get('lastClicked'));
-				self.navigate('data/' + self.model.get('pid'), {trigger: true});
-			});
-			this.model.file.on('change', function() {
-				self.view.dataDisplay.fileCheck(self.model.file);
-			});
-			this.view.on('dirUpRequested', function() {
-				self.navigate('data/' + self.model.get('ppid') ,{trigger: true});
-			});
-		},
-	});
+	"use strict";
+	
 	Drupal.behaviors.biogeog_portal = {
 		attach: function() {
-			window.app = new App();
-			window.app.version = '0.0.0';
+			cecPortal.version = '0.0.0';
 			Backbone.history.start();
 		}
 	};

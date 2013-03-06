@@ -9,8 +9,14 @@
 				<label class='cec-data-header-text'>Path: </label>
 				<span id='data-path'></span>
 			</div>
-		</div>               
-		<ul id='cec-data-list'></ul>
+		</div>
+		<ul id='cec-data-list'>
+			<script type="text/x-handlebars-template" id='cec-data-list-template'>              
+				{{#each files}}
+					<li class='cec-data-list-item' data-parent-id='{{pid}}' data-file-id='{{id}}' data-file-type='{{type}}' data-file-title='{{title}}'>{{title}}</li>
+				{{/each}}
+			</script>
+		</ul>
 	</div>
 	<div id='cec-data-wrapper'>
 		<h2 class='cec-data-header-text'>Data</h2>
