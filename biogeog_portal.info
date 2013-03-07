@@ -1,8 +1,8 @@
-name = Biogeog Data Portal
-description = CEC data portal for Biogeog website
+name = Data Portal
+description = Data portal for filesystem and previewing file contents
 core = 7.x
 version = 7.x-1.0
-stylesheets[all][]  = css/cec-data-portal.css
+stylesheets[all][]  = css/data-portal.css
 scripts[] = js/app.settings.js
 scripts[] = js/Model.js
 scripts[] = js/View.js
