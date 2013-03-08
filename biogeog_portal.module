@@ -2,36 +2,36 @@
 
 function biogeog_portal_menu() {
 	$items = array();
-	$items['data/cec/portal'] = array(
-		'title' => 'CEC Data Portal',
-		'description' => t('Web portal for the CEC data collection'),
+
+	$page_path = variable_get('data_portal_page_path', 'data/portal');
+
+	$items[$page_path] = array(
+		'title' => 'Data Portal',
+		'description' => t('Web portal data collection'),
 		'page callback' => 'biogeog_portal_page_gen',
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
-	$items['admin/config/cec-data-portal'] = array(
-		'title' => 'CEC Data Portal Settings',
-		'description' => t('Configuration for the CEC data portal module'),
+	$items['admin/config/data-portal'] = array(
+		'title' => 'Data Portal Settings',
+		'description' => t('Configuration for the data portal module'),
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('biogeog_portal_config'),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
-	$items['data/cec/portal/update/%'] = array(
-		'title' => 'CEC Data Portal Get Image',
-		'description' => t('Configuration for the CEC data portal module'),
+	$items[$page_path . '/update/%'] = array(
+		'title' => 'Data Portal Update',
 		'page callback' => 'biogeog_portal_ajax_page',
 		'page arguments' => array(4),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
-	$items['data/cec/portal/get-image/%'] = array(
-		'title' => 'CEC Data Portal Get Image',
-		'description' => t('Configuration for the CEC data portal module'),
+	$items[$page_path . '/get-image/%'] = array(
+		'title' => 'Data Portal Get Image',
 		'page callback' => 'biogeog_portal_get_image',
 		'page arguments' => array(4),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
-	$items['data/cec/portal/get-text/%'] = array(
-		'title' => 'CEC Data Portal Get Image',
-		'description' => t('Configuration for the CEC data portal module'),
+	$items[$page_path . '/get-text/%'] = array(
+		'title' => 'Data Portal Get Image',
 		'page callback' => 'biogeog_portal_get_text',
 		'page arguments' => array(4),
 		'access arguments' => array('access data portal'),
@@ -42,16 +42,41 @@ function biogeog_portal_menu() {
 function biogeog_portal_config() {
 	$form = array();
 
+	$fs_path = variable_get('data_portal_fs_path', '/');
+	$page_path = variable_get('data_portal_page_path', '/data/portal');
+
+	$form['data_portal_fs_path'] = array(
+		'#type' => 'textfield',
+		'#default_value' => $fs_path);
+	$form['data_portal_page_path'] = array(
+		'#type' => 'textfield',
+		'#default_value' => $page_path);
 	$form['run_cec_data_up'] = array(
 		'#type' => 'submit',
 		'#value' => 'Run CEC Data Update',
 		'#submit' => array('biogoeg_portal_run_db_up'));
-	return($form);
+	$form['recrawl'] = array(
+		'#type' => 'submit',
+		'#value' => 'Recrawl',
+		'#submit' => array('biogeog_portal_run_recrawl'));
+	return(system_settings_form($form));
+}
+
+function biogeog_portal_run_recrawl() {
+	ini_set('max_execution_time', 99999999999999);
+	$fs_path = variable_get('data_portal_fs_path', '/');
+	$module = drupal_get_path('module', 'biogeog_portal');
+	$site_root = exec('pwd');
+	chdir($fs_path);
+	exec("find . > $site_root/$module/db/dir_db.csv &");
+	chdir($site_root);
+
+	dsm("$site_root/$module/db/dir_db.csv");
 }
 
 function biogoeg_portal_run_db_up() {
 	ini_set('max_execution_time', 99999999999999);
-	$f = fopen(drupal_get_path('module', 'biogeog_portal') . '/biogeog_dir_db.csv', 'r');
+	$f = fopen(drupal_get_path('module', 'biogeog_portal') . '/db/dir_db.csv', 'r');
 	$id = 0;
 	// Holds dir name to check if name already exists in data structure.
 	$struct = array();
@@ -62,6 +87,8 @@ function biogoeg_portal_run_db_up() {
 	db_delete('biogeog_portal_data')->execute();
 	// Gets each file and directory in the current path split by '/'.
 	while(($line = fgetcsv($f, 4000, '/')) != FALSE) {
+		// Removing . from beginning of path.
+		array_shift($line);
 		// First assume directory/file's parent id is 0.
 		$pid = array(0,0);
 		// For every directory/file name in the path with the key value as its directory level.
@@ -183,6 +210,7 @@ function biogeog_portal_page_gen() {
 	$results = $query->execute();
 	$data = array();
 	while($record = $results->fetchAssoc()) {
+		dsm($record);
 		$fileType = preg_match('/^.*\.(.*?)$/i', $record['title'], $ft);
 		if(!isset($ft[1])) {
 			$type = 'directory';

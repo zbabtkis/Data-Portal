@@ -59,7 +59,6 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
 				data.files = cecPortal.Model.get('data');
 				var list = this.template(data);
 				this.$el.html(list);
-				this.$el.antiscroll();
 				this.trigger('dataListed');
 			},
 			events: {
@@ -95,7 +94,6 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
 			renderText: function() {
 				var data = cecPortal.Model.file.get('text');
 				this.$el.html('<pre>' + data + '</pre>');
-				this.$el.antiscroll();
 			},
 			renderImage: function() {
 				this.$el.html('');
