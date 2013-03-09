@@ -7,6 +7,7 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
 		loadText: function(id) {
 			var that = this;
 			var url = '/' + Drupal.settings.menu + '/get-text/' + that.get('id');
+			console.log(url);
 			$.ajax({
 				'url': url,
 				'dataType': 'text',
@@ -23,31 +24,37 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
 			initialize: function() {
 				this.displayPath = [''];
 				this.file = new File();
+				this.on('change:id', this.changeDir);
+				_.bindAll(this);
 			},
-			changeDir: function(id) {
-				var url = '/' + Drupal.settings.menu + '/update/' + id;
-				var self = this;
+			changeDir: function() {
+				var url = 'http://snow-dev.eri.ucsb.edu/' + Drupal.settings.menu + '/update/' + this.get('id');
 				$.ajax({
-					'url' : url,
-					'dataType': 'json',
-					'success' : function(data) {
-						self.set({
-							'path': data.path,
-							'data': data.items,
-							'ppid': data.ppid,
-							'pid': data.pid,
-							'validate': true});
-					},
-					fail: function(e) {
-						console.log(e);
-					}
+					url: url,
+					dataType: 'json',
+					async: true,
+					data: {test: 'none'},
+					success: this.loadData
 				});
+			},
+			loadData: function(data) {
+				if(data.path) {
+					this.set({
+						'path': data.path,
+						'data': data.items,
+						'ppid': data.ppid,
+						'pid': data.pid,
+						'validate': true});
+				} else {
+					console.log('nothing');
+				}
 			},
 			validate: function(attrs, opts) {
 				var errors = {};
-	
-				if(attrs.data == undefined) {
-					errors.data = "The requested directory is empty";
+				if(attrs['id'] == undefined) {
+					if(attrs.data == undefined) {
+						errors.data = "The requested directory is empty";
+					}
 				}
 	
 				return _.isEmpty(errors) ? null : errors;

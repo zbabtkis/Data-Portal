@@ -12,9 +12,9 @@
 		</div>
 		<ul id='cec-data-list'>
 			<script type="text/x-handlebars-template" id='cec-data-list-template'>              
-				{{#each files}}
-					<li class='cec-data-list-item' data-parent-id='{{pid}}' data-file-id='{{id}}' data-file-type='{{type}}' data-file-title='{{title}}'>{{title}}</li>
-				{{/each}}
+				{{#zebra files}}
+					<li class='cec-data-list-item {{stripeClass}}' data-parent-id='{{pid}}' data-file-id='{{id}}' data-file-type='{{type}}' data-file-title='{{title}}'>{{title}}</li>
+				{{/zebra}}
 			</script>
 		</ul>
 	</div>

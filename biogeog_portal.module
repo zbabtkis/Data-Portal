@@ -21,19 +21,19 @@ function biogeog_portal_menu() {
 	$items[$page_path . '/update/%'] = array(
 		'title' => 'Data Portal Update',
 		'page callback' => 'biogeog_portal_ajax_page',
-		'page arguments' => array(4),
+		'page arguments' => array(3),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
 	$items[$page_path . '/get-image/%'] = array(
 		'title' => 'Data Portal Get Image',
 		'page callback' => 'biogeog_portal_get_image',
-		'page arguments' => array(4),
+		'page arguments' => array(3),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
 	$items[$page_path . '/get-text/%'] = array(
 		'title' => 'Data Portal Get Image',
 		'page callback' => 'biogeog_portal_get_text',
-		'page arguments' => array(4),
+		'page arguments' => array(3),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
 	return($items);
@@ -48,9 +48,10 @@ function biogeog_portal_config() {
 	$form['data_portal_fs_path'] = array(
 		'#type' => 'textfield',
 		'#default_value' => $fs_path);
-	$form['data_portal_page_path'] = array(
+	//Customizable display path disabled for now due to menu argument placement issue.
+	/*$form['data_portal_page_path'] = array(
 		'#type' => 'textfield',
-		'#default_value' => $page_path);
+		'#default_value' => $page_path);*/
 	$form['run_cec_data_up'] = array(
 		'#type' => 'submit',
 		'#value' => 'Run CEC Data Update',
@@ -87,7 +88,7 @@ function biogoeg_portal_run_db_up() {
 	db_delete('biogeog_portal_data')->execute();
 	// Gets each file and directory in the current path split by '/'.
 	while(($line = fgetcsv($f, 4000, '/')) != FALSE) {
-		// Removing . from beginning of path.
+		// Removing '.'' from beginning of path.
 		array_shift($line);
 		// First assume directory/file's parent id is 0.
 		$pid = array(0,0);
@@ -190,9 +191,11 @@ function biogeog_portal_get_text($id) {
 			  ->condition('id',$id,'=');
 		$results = $query->execute();
 
+		$fs_path = variable_get('data_portal_fs_path', '/');
+
 		$data = array();
 		while($record = $results->fetchAssoc()) {
-		    print(readfile($record['path']));
+		    print(readfile($fs_path . '/' . $record['path']));
 		}
 	} else {
 		print("You haven't requested a directory id");

@@ -1,15 +1,15 @@
 #cec-data {
-	background-color: #202020;
-}
-#cec-selector-head {
-
+	background-color: #eee;
+	border: 1px solid #AAA;
+	box-shadow: 0 0 10px #bbb inset;
 }
 .data-head-wrapper {
-	background-color: #121212;
+	background-color: #fff;
 	padding: 10px;
 	color: black;
 	width: 50%;
 	display: inline-block;
+	box-shadow: -20px 0px 50px #eee inset;
 }
 #cec-data-nav-buttons {
 	width: 80px;
@@ -22,28 +22,33 @@
 }
 #data-path,.cec-data-header-text {
 	display: inline;
-	color: white;
+	color: #222;
 }
 #cec-data-list {
-	background-color: #046E68;
-	color: white;
+	background-color: #d4eff1;
+	color: #222;
 	list-style: none;
 	padding: 0;
-	max-height: 600px;
+	height: 600px;
+	overflow: auto;
+	margin: 0;
 }
 #cec-data-list li {
+	background-color: #d4eff1;
 	padding: 10px;
 }
 #cec-data-list li:hover {
-	background-color: #FF8400 !important;
+	background-color: #01939a !important;
 	cursor: pointer;
 	cursor: hand;
 	color: black;
 }
 #cec-data-wrapper {
 	width: 50%;
-	max-height: 500px;
-	color: white;
+}
+#cec-data-wrapper pre {
+	height: 600px;
+	overflow: auto;
 	padding: 10px;
 }
 .cec-button {
@@ -66,7 +71,7 @@
 	text-align: center;
 }
 .row-odd {
-	background-color: #047D76 !important;
+	background-color: #e1f6f7 !important;
 }
 .overlay {  
     position:fixed;
@@ -74,7 +79,11 @@
     left:0;
     width:100%;
     height:100%;
-    z-index:1000;
+    z-index:999999999999999999;
+}
+.overlay #cec-data-wrapper pre, .overlay #cec-data-list {
+	height: 90% !important;
+	position: fixed;
 }
 #cec-portal-full-screen {
 	background-color: none !important;
