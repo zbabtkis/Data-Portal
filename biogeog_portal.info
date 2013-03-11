@@ -5,3 +5,5 @@ version = 7.x-1.0
 stylesheets[all][]  = css/data-portal.css
 
 configure = admin/config/data-portal
+
+dependencies[] = background_process

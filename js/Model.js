@@ -38,7 +38,7 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
 				});
 			},
 			loadData: function(data) {
-				if(data.path) {
+				if(data.items) {
 					this.set({
 						'path': data.path,
 						'data': data.items,
