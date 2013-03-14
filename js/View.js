@@ -22,7 +22,7 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
       toggleSmallScreen: function() {
         var self = this;
         this.screenToggle.$el.click(function() {
-          self.$el.removeClass('overlay');
+          self.$el.removeClass('data-portal-overlay');
           $('#cec-portal-small-screen').attr('id','cec-portal-full-screen');
           $('#cec-portal-full-screen').attr('alt','Full Screen');
           $('#cec-portal-full-screen').attr('title','Full Screen');
@@ -31,7 +31,7 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
       toggleFullScreen: function() {
         var self = this;
         this.screenToggle.$el.click(function() {
-          self.$el.addClass('overlay');
+          self.$el.addClass('data-portal-overlay');
           $('#cec-portal-full-screen').attr('id','cec-portal-small-screen');
           $('#cec-portal-small-screen').attr('title','Exit Full Screen');
           $('#cec-portal-small-screen').attr('alt','Exit Full Screen');

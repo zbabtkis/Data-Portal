@@ -73,7 +73,7 @@
 .row-odd {
 	background-color: #e1f6f7 !important;
 }
-.overlay {  
+.data-portal-overlay {  
     position:fixed;
     top:0;
     left:0;
