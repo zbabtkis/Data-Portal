@@ -1,16 +1,30 @@
 <?php
+/**
+ * @file
+ * Drupal data portal module -- provides backend for javascript web application.
+ */
 
+/**
+ * Implements hook_menu().
+ */
 function biogeog_portal_menu() {
 	$items = array();
 
+	// @TODO find a way to deal with url arguments so that Drupal can still
+	// read them with unknown path settings.
+
+	// This currently can't be set from the administrative menu so will
+	// always be set to data/portal
 	$page_path = variable_get('data_portal_page_path', 'data/portal');
 
+	// Main data portal page that web app is rendered on.
 	$items[$page_path] = array(
 		'title' => 'Data Portal',
 		'description' => t('Web portal data collection'),
 		'page callback' => 'biogeog_portal_page_gen',
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
+	// Module configuration menu.
 	$items['admin/config/data-portal'] = array(
 		'title' => 'Data Portal Settings',
 		'description' => t('Configuration for the data portal module'),
@@ -18,65 +32,75 @@ function biogeog_portal_menu() {
 		'page arguments' => array('biogeog_portal_config'),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
+	// XHR interface for requesting directory listing.
 	$items[$page_path . '/update/%'] = array(
 		'title' => 'Data Portal Update',
 		'page callback' => 'biogeog_portal_ajax_page',
 		'page arguments' => array(3),
 		'access arguments' => array('access data portal'),
-	  'type' => MENU_NORMAL_ITEM);
+	  'type' => MENU_CALLBACK);
+	// XHR interface for requesting image.
 	$items[$page_path . '/get-image/%'] = array(
 		'title' => 'Data Portal Get Image',
 		'page callback' => 'biogeog_portal_get_image',
 		'page arguments' => array(3),
 		'access arguments' => array('access data portal'),
-	  'type' => MENU_NORMAL_ITEM);
+	  'type' => MENU_CALLBACK);
+	// XHR interface for requesting plain text.
 	$items[$page_path . '/get-text/%'] = array(
 		'title' => 'Data Portal Get Image',
 		'page callback' => 'biogeog_portal_get_text',
 		'page arguments' => array(3),
 		'access arguments' => array('access data portal'),
-	  'type' => MENU_NORMAL_ITEM);
+	  'type' => MENU_CALLBACK);
 	return($items);
 }
-
+/**
+ * Config form for Data Portal settings.
+ */
 function biogeog_portal_config() {
-	$form = array();
-
+	// Filesystem path that the module crawls -- set by user or default to '/'.
 	$fs_path = variable_get('data_portal_fs_path', '/');
+	// Path for data portal to be rendered on. Defaults to '/data/portal'.
 	$page_path = variable_get('data_portal_page_path', '/data/portal');
-
+	// Gets time that the db file was last updated. Helps determine whether data crawl has finished.
 	$ft = filemtime($_SERVER['DOCUMENT_ROOT'] . '/' . drupal_get_path('module', 'biogeog_portal') . '/db/dir_db.csv');
-	if(time() - $ft >= 60) {
+	$form = array(); // Holds form for rendering by drupal_get_form.
+
+	if(time() - $ft >= 60) { //  If file was last updated more than 1 minute ago, datacrawl has completed.
 		drupal_set_message('Filesystem crawl complete. You can now run a database update!');
 		$disabled = FALSE;
 	} else {
 		drupal_set_message('Filesystem crawl still running. You can run the database update when crawling is complete');
 		$disabled = TRUE;
 	}
-
+	// Filesystem path to crawl.
 	$form['data_portal_fs_path'] = array(
 		'#type' => 'textfield',
 		'#default_value' => $fs_path);
-	//Customizable display path disabled for now due to menu argument placement issue.
-	/*$form['data_portal_page_path'] = array(
+	/*Customizable display path disabled for now due to menu argument placement issue.
+	$form['data_portal_page_path'] = array(
 		'#type' => 'textfield',
 		'#default_value' => $page_path);*/
 	$form['run_cec_data_up'] = array(
 		'#type' => 'submit',
-		'#value' => 'Run CEC Data Update',
+		'#value' => 'Run Data Update',
 		'#submit' => array('biogoeg_portal_db_up'),
 		'#disabled' => $disabled);
 	$form['recrawl'] = array(
 		'#type' => 'submit',
 		'#value' => 'Recrawl',
 		'#submit' => array('biogeog_portal_run_recrawl'));
+
+	// Saves form input and renders form.
 	return(system_settings_form($form));
 }
 
 function biogeog_portal_run_recrawl() {
-	ini_set('max_execution_time', 9999999999999999999999);
+	// Data path to crawl.
 	$fs_path = variable_get('data_portal_fs_path', '/');
 	$module = drupal_get_path('module', 'biogeog_portal');
+	// Save currend working directory to return to once find has been executed.
 	$site_root = exec('pwd');
 	// Change directory to data dir.
 	chdir($fs_path);
@@ -84,7 +108,7 @@ function biogeog_portal_run_recrawl() {
 	exec("find . > $site_root/$module/db/dir_db.csv &");
 	chdir($site_root);
 
-	dsm("$site_root/$module/db/dir_db.csv");
+	drupal_set_message("Now crawling for data...");
 }
 
 function biogoeg_portal_db_up() {
@@ -99,8 +123,6 @@ function biogeog_portal_run_db_up() {
 	// Holds full data set including id, pid and dir name.
 	$data = array();
 	$last_dir = null;
-	// Holds directory path array for parsing csv line.
-	$cwd = array();
 	db_delete('biogeog_portal_data')->execute();
 	// Gets each file and directory in the current path split by '/'.
 	while(($line = fgetcsv($f, 4000, '/')) != FALSE) {
@@ -108,10 +130,13 @@ function biogeog_portal_run_db_up() {
 		array_shift($line);
 		// First assume directory/file's parent id is 0.
 		$pid = array(0,0);
+		// Holds directory path array for parsing csv line.
+		$cwd = array();
 		// For every directory/file name in the path with the key value as its directory level.
 		foreach($line as $key=>$dir) {
 			$cwd[] = $dir;
-			// Should only add entry if the files at that directory level don't exist yet or if the directory value already exists at that level.
+			// Should only add entry if the files at that directory level don't exist
+			// yet or if the directory value already exists at that level.
 			if(!isset($struct[$key]) || !in_array($dir, $struct[$key])) {
 				// Make the new file/directories id one more.
 				$id++;
@@ -128,14 +153,18 @@ function biogeog_portal_run_db_up() {
 				}
 				// Adds the directory name to the filesystem structure.
 				$struct[$key][$dir] = $dir;
-				// Creates array of data for insertion into db.
-				$data[$key][$dir] = array('name'=>$dir, 'id'=> $id, 'pid'=>$pid[1], 'ppid'=> $pid[0]);
 				// Inserts data into database.
-				db_insert('biogeog_portal_data')->fields(array('title' => $dir, 'pid' => $pid[1], 'ppid'=> $pid[0], 'id' => $id, 'path' => $path))->execute();
+				db_insert('biogeog_portal_data')
+					->fields(array(
+						'title' => $dir,
+						'pid' => $pid[1],
+						'ppid'=> $pid[0],
+						'id' => $id,
+						'path' => $path))
+					->execute();
 			}
 			$last_dir = $dir;
 		}
-		$cwd = null;
 	}
 }
 
@@ -228,6 +257,7 @@ function biogeog_portal_page_gen() {
 		  ->condition('pid',4,'=');
 	$results = $query->execute();
 	$data = array();
+	// Run db query for initial data load in app.
 	while($record = $results->fetchAssoc()) {
 		dsm($record);
 		$fileType = preg_match('/^.*\.(.*?)$/i', $record['title'], $ft);
@@ -239,16 +269,16 @@ function biogeog_portal_page_gen() {
 		$record['type'] = $type;
         $data[] = $record;
     }
+    // Add javascript app files and dependencies.
     drupal_add_library('system', 'ui.draggable');
-    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/lib/handlebars.js');
-    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/lib/underscore-min.js');
-    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/lib/backbone-min.js');
-    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/lib/antiscroll.js');
-    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/app.settings.js');
-    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/Model.js');
-    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/View.js');
-    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/Controller.js');
-    drupal_add_js(drupal_get_path('module', 'biogeog_portal') . '/js/app.js');
+    drupal_add_js($module_path . 'js/lib/handlebars.js');
+    drupal_add_js($module_path . 'js/lib/underscore-min.js');
+    drupal_add_js($module_path . 'js/lib/backbone-min.js');
+    drupal_add_js($module_path . 'js/lib/antiscroll.js');
+    drupal_add_js($module_path . 'js/Model.js');
+    drupal_add_js($module_path . 'js/View.js');
+    drupal_add_js($module_path . 'js/Controller.js');
+    drupal_add_js($module_path . 'js/app.js');
 
     // Send current filesystem level objects to app Model.
 	drupal_add_js(array('cec-data' => $data, 'path' => $module_path, 'menu' => $_GET['q']), 'setting');

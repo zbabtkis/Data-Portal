@@ -1,15 +1,16 @@
-<div id='cec-data'>
-	<div id='cec-data-selector'>
-		<div id='data-selector-head'>
-			<div id='cec-data-nav-buttons'>
+<!-- Begin data portal -->
+<article id='cec-data'>
+	<nav id='cec-data-selector'>
+		<header id='data-selector-head'>
+			<nav id='cec-data-nav-buttons'>
 				<div id='cec-portal-full-screen' class='cec-button' title='Full Screen' alt='Full Screen'></div>
 				<div class='cec-button back'></div>
-			</div>
-			<div class='data-head-wrapper'>
+			</nav>
+			<aside class='data-head-wrapper'>
 				<label class='cec-data-header-text'>Path: </label>
 				<span id='data-path'></span>
-			</div>
-		</div>
+			</aside>
+		</header>
 		<ul id='cec-data-list'>
 			<script type="text/x-handlebars-template" id='cec-data-list-template'>              
 				{{#zebra files}}
@@ -17,9 +18,10 @@
 				{{/zebra}}
 			</script>
 		</ul>
-	</div>
-	<div id='cec-data-wrapper'>
+	</nav>
+	<article id='cec-data-wrapper'>
 		<h2 class='cec-data-header-text'>Data</h2>
-		<div id='cec-data-data'>
-	</div>
-</div>
+		<p id='cec-data-data'></p>
+	</article>
+</article>
+<!-- End data portal -->
