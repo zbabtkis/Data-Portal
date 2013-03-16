@@ -28,7 +28,7 @@ Hooking In
 ---------------
 You might need to add additional file handlers for your data. Hook_data_type_handler() can help you with this. This module comes preloaded with a couple basic output options -- text and images. But let's say you have a bunch of .dat files that contain comma separated lists that can be rendered as a table... Here's an example of how you would make that happen:
 
-```
+```php
 /**
  * Implements hook_data_type_handler().
  */
