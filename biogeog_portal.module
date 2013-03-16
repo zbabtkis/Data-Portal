@@ -115,55 +115,101 @@ function biogoeg_portal_db_up() {
 	background_process_start('biogeog_portal_run_db_up');
 }
 
+class FS {
+	// Start counting at 1.
+	public $id = 1;
+	public $path = "";
+	public function add_path($path) {
+		$path = $this->path_to_str($path);
+		if($this->fetch_path($path) == null) {
+			$this->path = new Path($path, $this->id);
+			$this->id++;
+			$this->db_insert();
+		}
+	}
+	public function get_parent($path) {
+		$path = $this->path_to_arr($path);
+		array_pop($path);
+		$path = $this->path_to_str($path);
+		$parent = $this->fetch_path($path);
+		return $parent;
+	}
+	public function get_pid($path) {
+		$parent = $this->get_parent($path->path);
+		$pid = $parent ? $parent['id'] : 0;
+		return $pid;
+	}
+	public function get_ppid($path) {
+		$parent = $this->get_parent($path->path);
+		dsm($parent);
+		$ppid = $parent ? $parent['pid'] : 0;
+		return $ppid;
+	}
+	public function db_insert() {
+		$path = $this->path;
+		db_insert('biogeog_portal_data')
+			->fields(array(
+				'title' => $path->title,
+				'pid' => $this->get_pid($path),
+				'ppid' => $this->get_ppid($path),
+				'id' => $path->id,
+				'path' => $path->path))
+			->execute();
+	}
+	public function fetch_path($path) {
+		$result = db_select('biogeog_portal_data', 'b')
+			->fields('b')
+			->condition('path',$path,'=')
+			->execute()->fetchAssoc();
+		return($result);
+	}
+	public function path_to_str($path) {
+		if(gettype($path) == 'array') {
+			$path = implode('/', $path);
+		}
+		return $path;
+	}
+	public function path_to_arr($path) {
+		if(gettype($path) == 'string') {
+			$path = explode('/', $path);
+		}
+		return $path;
+	}
+}
+
+class Path {
+	public function __construct($path, $id) {
+		$this->id = $id;
+		$this->path = $path;
+		$this->title = $this->get_title();
+	}
+	public function get_title() {
+		$path = FS::path_to_arr($this->path);
+		$title = array_pop($path);
+		return $title;
+	}
+	private function get_parent($path) {
+		$arr = explode('/', $path);
+		array_pop($arr);
+		return implode('/',$arr);
+	}
+}
+
 function biogeog_portal_run_db_up() {
+	ini_set('memory_limit', '512M');
 	$f = fopen(drupal_get_path('module', 'biogeog_portal') . '/db/dir_db.csv', 'r');
-	$id = 0;
-	// Holds dir name to check if name already exists in data structure.
-	$struct = array();
-	// Holds full data set including id, pid and dir name.
-	$data = array();
-	$last_dir = null;
 	db_delete('biogeog_portal_data')->execute();
+	// Create new filesystem.
+	$fs = new FS();
 	// Gets each file and directory in the current path split by '/'.
 	while(($line = fgetcsv($f, 4000, '/')) != FALSE) {
 		// Removing '.'' from beginning of path.
 		array_shift($line);
-		// First assume directory/file's parent id is 0.
-		$pid = array(0,0);
-		// Holds directory path array for parsing csv line.
 		$cwd = array();
 		// For every directory/file name in the path with the key value as its directory level.
 		foreach($line as $key=>$dir) {
 			$cwd[] = $dir;
-			// Should only add entry if the files at that directory level don't exist
-			// yet or if the directory value already exists at that level.
-			if(!isset($struct[$key]) || !in_array($dir, $struct[$key])) {
-				// Make the new file/directories id one more.
-				$id++;
-				$path = implode('/', $cwd);
-				// Verifies that the level is not first level and does have a parent.
-				if($key != 0) {
-					// Set parent id equal to the id of the parent directory.
-					$pid[0] = $data[$key-1][$last_dir]['pid'];
-					$pid[1] = $data[$key-1][$last_dir]['id'];
-				}
-				else {
-					// The pid is irrelevant and should be treated as 0.
-					$pid = array(0,0);
-				}
-				// Adds the directory name to the filesystem structure.
-				$struct[$key][$dir] = $dir;
-				// Inserts data into database.
-				db_insert('biogeog_portal_data')
-					->fields(array(
-						'title' => $dir,
-						'pid' => $pid[1],
-						'ppid'=> $pid[0],
-						'id' => $id,
-						'path' => $path))
-					->execute();
-			}
-			$last_dir = $dir;
+			$fs->add_path($cwd);
 		}
 	}
 }
