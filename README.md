@@ -11,8 +11,8 @@ of displaying large amounts of data to a broader viewerbase.
 
 Requirements
 -------------------
-Drupal 7.x
-Background Tasks Module
+* Drupal 7.x
+* Background Tasks Module
 
 Installation
 ---------------
@@ -23,6 +23,47 @@ Installation
 5. The module is crawling! The message box at the top of the page will notify you when the data crawl is complete
 6. Once the process is complete, click Run DB Update -- this will import the filesystem structure that we just collected.
 7. That's it! You can now view the portal by navigating to data/portal. Keep in mind that the module is likely still running the database update in the background, so not all of your data will be available right away.
+
+Hooking In
+---------------
+You might need to add additional file handlers for your data. Hook_data_type_handler() can help you with this. This module comes preloaded with a couple basic output options -- text and images. But let's say you have a bunch of .dat files that contain comma separated lists that can be rendered as a table... Here's an example of how you would make that happen:
+
+```
+function myModule_data_type_handler() {
+  $items = array();
+  // Key can be anything, but must be unique.
+  $items['tabled_data'] = array(
+    'callback' => 'myModule_format_data_table', // The callback for rendering data.
+    'title' => 'Data', // The readable name of the file type.
+    'ext' => array( // Any extensions that should be rendered by this callback.
+      'dat',
+    ),
+  );
+  return $items;
+}
+
+function myModule_get_data($file, &$header) {
+  // Header is set after the callback has completed.
+  $header = "Content-Type: plain/text";
+  $handle = fopen($file['path'], 'r');
+  $row_count = 0;
+  // Loop through csv lines to get header cols and rows.
+  while($row = fgetcsv($handle, 4000, ',') != FALSE) {
+    if($row_count === 0) {
+      $header = $row;
+    } else {
+      $rows[] = $row;
+    }
+  }
+  // Render data as table.
+  $table = theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array('class' => array($file['title']))
+  ));
+  return $table;
+}
+```
 
 Issues
 ---------
