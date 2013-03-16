@@ -44,14 +44,14 @@ function biogeog_portal_menu() {
 	// XHR interface for requesting image.
 	$items[$page_path . '/get-image/%'] = array(
 		'title' => 'Data Portal Get Image',
-		'page callback' => 'biogeog_portal_get_image',
+		'page callback' => 'biogeog_portal_get_data',
 		'page arguments' => array(3),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_CALLBACK);
 	// XHR interface for requesting plain text.
 	$items[$page_path . '/get-text/%'] = array(
 		'title' => 'Data Portal Get Image',
-		'page callback' => 'biogeog_portal_get_text',
+		'page callback' => 'biogeog_portal_get_data',
 		'page arguments' => array(3),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_CALLBACK);
@@ -176,42 +176,80 @@ function biogeog_portal_ajax_page($dir_id) {
 	}
 }
 
-function biogeog_portal_get_image($id) {
-	if(isset($id)) {
-		$query = db_select('biogeog_portal_data','d');
-		// Ged file id, file's parent id and title of the file.
-		$query->fields('d',array('id','path','title'))
-		// On first view, we will show directories starting at level 4.
-			  ->condition('id',$id,'=');
-		$results = $query->execute();
-
-		$data = array();
-		while($record = $results->fetchAssoc()) {
-			header('Content-Disposition: application; filename="'.$record['title'].'"');
-		    print(readfile($record['path']));
-		}
-	} else {
-		print("You haven't requested a directory id");
-	}
+function biogeog_portal_get_image($file, &$header) {
+	$header = 'Content-Disposition: application; filename="'.$file['title'].'"';
+	return readfile($file['path']);
 }
 
-function biogeog_portal_get_text($id) {
+function biogeog_portal_get_text($file, &$header) {
+	$header = "Content-Type: plain/text";
+	return file_get_contents($file[0]['path']);
+}
+
+function biogeog_portal_data_type_handler() {
+	$items = array();
+	$items['plain_txt'] = array(
+		'callback' => 'biogeog_portal_get_text',
+		'title' => 'Text',
+		'ext' => array(
+			'txt',
+		),
+	);
+	$items['image'] = array(
+		'callback' => 'biogeog_portal_get_image',
+		'title' => 'Image',
+		'ext' => array(
+			'jpg',
+			'jpeg',
+			'png',
+			'gif',
+			'tiff',
+			'tiff',
+			'gtif',
+			'pdf'
+		),
+	);
+	$items['default'] = array(
+		'callback' => 'biogeog_portal_get_text',
+		'title' => 'Text',
+		'ext' => array(),
+	);
+	return $items;
+}
+
+function biogeog_portal_get_data($id) {
 	if(isset($id)) {
-		$query = db_select('biogeog_portal_data','d');
-		// Ged file id, file's parent id and title of the file.
-		$query->fields('d',array('id','path','title'))
-		// On first view, we will show directories starting at level 4.
-			  ->condition('id',$id,'=');
-		$results = $query->execute();
-
+		// Will hold header for rendering file.
+		$header;
+		// Data to render;
+		$rendered_file;
+		// File hasn't been handled by callback yet.
+		$handled = FALSE;
+		// Invoke module hooks.
+		$callbacks = module_invoke_all('data_type_handler');
+		$request = db_select('biogeog_portal_data','d')
+			// Ged file id, file's parent id and title of the file.
+			->fields('d',array('id','path','title','ext'))
+			// On first view, we will show directories starting at level 4.
+			->condition('id',$id,'=')
+			->range(0,1)
+			->execute()
+			->fetchAssoc();
+		// Root path to user defined data folder.
 		$fs_path = variable_get('data_portal_fs_path', '/');
-
-		$data = array();
-		while($record = $results->fetchAssoc()) {
-		    print(readfile($fs_path . '/' . $record['path']));
+		$request['path'] = $fs_path . '/' . $request['path'];
+		foreach($callbacks as $callback) {
+			// Does this this callback handle the file extension?
+			if(array_key_exists($request['ext'], $callback['ext'])) {
+				$rendered_file = call_user_func($callback['callback'],array($request, &$header));
+				$handled = TRUE;
+			}
 		}
-	} else {
-		print("You haven't requested a directory id");
+		if(!$handled) {
+			$rendered_file = call_user_func($callbacks['default']['callback'],array($request, &$header));
+		}
+		header($header);
+		print($rendered_file);
 	}
 }
 

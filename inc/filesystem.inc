@@ -44,7 +44,8 @@ class FS {
 				'pid' => $this->get_pid($path),
 				'ppid' => $this->get_ppid($path),
 				'id' => $path->id,
-				'path' => $path->path))
+				'path' => $path->path,
+				'ext' => $path->ext))
 			->execute();
 	}
 	public function fetch_path($path) {
@@ -74,6 +75,7 @@ class Path {
 		$this->id = $id;
 		$this->path = $path;
 		$this->title = $this->get_title();
+		$this->ext = $this->get_extension();
 	}
 	public function get_title() {
 		// Convert path to array using FS class method.
@@ -81,6 +83,9 @@ class Path {
 		// Gets filename or directory title.
 		$title = array_pop($path);
 		return $title;
+	}
+	public function get_extension($path) {
+		return substr(strrchr($this->title,'.'),1);
 	}
 	private function get_parent($path) {
 		$arr = explode('/', $path);
