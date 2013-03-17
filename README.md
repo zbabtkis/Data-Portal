@@ -77,11 +77,22 @@ function myModule_get_data($file, $method, &$header) {
 }
 ```
 
-You'll notice the three parameters that are passed into our callback. If you're curious, you can check out the structure using dsm($file); (if you have the devel module installed), but for now, all we really care about are the file's path and title. A reference to the document header is also available to us as a string. This defaults to text, but if you change the value of this reference to a different content type, the header will be set after the callback has completed.
+You'll notice the three parameters that are passed into our callback. 
+If you're curious, you can check out the structure using dsm($file); 
+(if you have the devel module installed), but for now, all we really care
+about are the file's path and title. A reference to the document header is 
+also available to us as a string. This defaults to text, but if you change
+the value of this reference to a different content type, the header will
+be set after the callback has completed.
 
-I'm using the "theme('table', $header, $rows)" Drupal function to simplify the table rendering process, but if for some reason you want to output the table manually, I say go for it!
+I'm using the "theme('table', $header, $rows)" Drupal function to simplify 
+the table rendering process, but if for some reason you want to output the 
+table manually, I say go for it!
 
-The parameter $method can be used to determine whether the request is coming from ajax or a html object. This can be useful when you are dealing with elements like <object> or <img> to differentiate between needing to serve out the actual resource, or an element that links to the resource.
+The parameter $method can be used to determine whether the request is coming
+from ajax or a html object. This can be useful when you are dealing with 
+elements like ```<object>``` or ```<img>``` to differentiate between needing 
+to serve out the actual resource, or an element that links to the resource.
 
 
 Issues
