@@ -85,7 +85,7 @@ also available to us as a string. This defaults to text, but if you change
 the value of this reference to a different content type, the header will
 be set after the callback has completed.
 
-The parameter $method can be used to determine whether the request is 
+The parameter ```php $method ``` can be used to determine whether the request is 
 coming from an XHR or an html object. This can be useful when you are dealing with elements like ```audio```, ```<object>``` or ```<img>``` to differentiate between needing to serve out the actual resource, or an element
 that links to the resource.
 
