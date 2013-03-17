@@ -54,12 +54,13 @@ function data_portal_menu() {
  * Config form for Data Portal settings.
  */
 function data_portal_config() {
+	global $base_path;
 	// Filesystem path that the module crawls -- set by user or default to '/'.
 	$fs_path = variable_get('data_portal_fs_path', '/');
 	// Path for data portal to be rendered on. Defaults to '/data/portal'.
 	$page_path = variable_get('data_portal_page_path', '/data/portal');
 	// Gets time that the db file was last updated. Helps determine whether data crawl has finished.
-	$ft = filemtime($_SERVER['DOCUMENT_ROOT'] . '/' . drupal_get_path('module', 'data_portal') . '/db/dir_db.csv');
+	$ft = filemtime($base_path . '/' . drupal_get_path('module', 'data_portal') . '/db/dir_db.csv');
 	$form = array(); // Holds form for rendering by drupal_get_form.
 
 	if(time() - $ft >= 60) { //  If file was last updated more than 1 minute ago, datacrawl has completed.
@@ -266,7 +267,8 @@ function data_portal_get_data($id, $method) {
 }
 
 function data_portal_page_gen() {
-	$module_path = '/' . drupal_get_path('module', 'data_portal') . '/';
+	global $base_path;
+	$module_path = $base_path . '/' . drupal_get_path('module', 'data_portal') . '/';
 	// Select biogeog data portal db containing directory heirarchy.
 	$query = db_select('data_portal_data','d');
 	// Ged file id, file's parent id and title of the file.
