@@ -6,7 +6,7 @@
 
 Contents
 -----------
-Drupal.behaviors.biogeog_portal -- attach data portal to Drupal data/portal menu page.
+Drupal.behaviors.data_portal -- attach data portal to Drupal data/portal menu page.
  */
 
 var cecPortal = window.cecPortal || (window.cecPortal = {});
@@ -14,7 +14,7 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
 (function ($) {
 	"use strict";
 	
-	Drupal.behaviors.biogeog_portal = {
+	Drupal.behaviors.data_portal = {
 		attach: function() {
 			cecPortal.version = '0.1-alpha';
 			// Start listening for hashchanges.

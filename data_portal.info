@@ -1,0 +1,10 @@
+name = Data Portal
+description = Data portal that displays filesystem and offers previous for various filetypes.
+core = 7.x
+version = 7.x-1.0
+package = Data Portal
+stylesheets[all][]  = css/data-portal.css
+
+configure = admin/config/data-portal
+
+dependencies[] = background_process

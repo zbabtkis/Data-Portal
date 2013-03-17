@@ -38,7 +38,7 @@ class FS {
 	public function db_insert() {
 		$path = $this->path;
 		// Insert path information into database.
-		db_insert('biogeog_portal_data')
+		db_insert('data_portal_data')
 			->fields(array(
 				'title' => $path->title,
 				'pid' => $this->get_pid($path),
@@ -50,7 +50,7 @@ class FS {
 	}
 	public function fetch_path($path) {
 		// Find paths that are already in database.
-		$result = db_select('biogeog_portal_data', 'b')
+		$result = db_select('data_portal_data', 'b')
 			->fields('b')
 			->condition('path',$path,'=')
 			->execute()->fetchAssoc();

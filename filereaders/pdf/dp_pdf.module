@@ -1,0 +1,42 @@
+<?php
+/**
+ * @file
+ * Data Portal module helper for previewing and retrieving PDF files.
+ */
+
+/**
+ * Implements hook_data_type_handler().
+ */
+function dp_pdf_data_type_handler() {
+	$items = array();
+	$items['pdf'] = array(
+		'callback' => 'dp_pdf_get_pdf',
+		'title' => 'PDF',
+		'ext' => array(
+			'pdf',
+		),
+	);
+	return $items;
+}
+/**
+ * Callback from db_pdf_data_type_handler().
+ */
+function dp_pdf_get_pdf($file, $method, &$header) {
+	switch($method) {
+		case 'ajax':
+			// Path to pick up file.
+			$deliver_path = '/data/portal/get-data/' . 
+							$file['id'] . '/resource';
+			// HTML PDF inline object.
+			$object = "<object class='data-portal pdf-view' type='application/pdf' data='" . 
+					  $deliver_path . "'>";
+			return $object;
+		case 'resource':
+			$header = 'Content-Type: application; filename="' . 
+					  $file['title'] . '"';
+			$file = readfile($file['path']);
+			return $file;
+		default:
+			return "Method not defined.";
+	}
+}
