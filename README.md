@@ -52,7 +52,7 @@ But we still haven't provided any instructions for how to process the data! Let'
 ```php
 /**
  * Callback from myModule_data_type_handler().
- * Renders data files as a table.
+ * Renders data file as a table.
  */
 function myModule_get_data($file, $method, &$header) {
   // Header is set after the callback has completed.
@@ -85,14 +85,13 @@ also available to us as a string. This defaults to text, but if you change
 the value of this reference to a different content type, the header will
 be set after the callback has completed.
 
+The parameter $method can be used to determine whether the request is 
+coming from an XHR or an html object. This can be useful when you are dealing with elements like ```audio```, ```<object>``` or ```<img>``` to differentiate between needing to serve out the actual resource, or an element
+that links to the resource.
+
 I'm using the "theme('table', $header, $rows)" Drupal function to simplify 
 the table rendering process, but if for some reason you want to output the 
 table manually, I say go for it!
-
-The parameter $method can be used to determine whether the request is coming
-from ajax or a html object. This can be useful when you are dealing with 
-elements like ```<object>``` or ```<img>``` to differentiate between needing 
-to serve out the actual resource, or an element that links to the resource.
 
 
 Issues
