@@ -54,26 +54,27 @@ But we still haven't provided any instructions for how to process the data! Let'
  * Callback from myModule_data_type_handler().
  * Renders data file as a table.
  */
-function myModule_get_data($file, $method, &$header) {
+function snow_data_format_data($file, $method, &$header) {
   // Header is set after the callback has completed.
-  $header = "Content-Type: plain/text";
-  $handle = fopen($file['path'], 'r');
-  $row_count = 0;
-  // Loop through csv lines to get header cols and rows.
-  while($row = fgetcsv($handle, 4000, ',') != FALSE) {
-    if($row_count === 0) {
-      $header = $row;
-    } else {
-      $rows[] = $row;
-    }
-  }
-  // Render data as table.
-  $table = theme('table', array(
-    'header' => $header,
-    'rows' => $rows,
-    'attributes' => array('class' => array($file['title']))
-  ));
-  return $table;
+ 	//$header = "Content-Type: plain/text";
+ 	$row_count = 0;
+ 	$file = fopen($file['path'], "r");
+ 	// Loop through csv lines to get header cols and rows.
+ 	while(($row = fgetcsv($file, 4000, ',')) !== FALSE) {
+ 	  if($row_count === 0) {
+ 	    $head = $row;
+ 	  } elseif($row_count > 0) {
+ 	    $rows[] = $row;
+ 	  }
+    $row_count++;
+ 	}
+ 	// Render data as table.
+ 	$table = theme('table', array(
+ 	  'header' => $head,
+ 	  'rows' => $rows,
+ 	  'attributes' => array('class' => array($file['title']))
+ 	));
+ 	return $table;
 }
 ```
 
