@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file
+ * Class definitions for parsing and importing filesystem into data portal db.
+ */
+
+/** Defines Filesystem class */
 class FS {
 	// Start counting at 1.
 	public $id = 1;
@@ -68,7 +74,7 @@ class FS {
 		return $path;
 	}
 }
-
+/** Defines file / directory path class */
 class Path {
 	public function __construct($path, $id) {
 		$this->id = $id;
