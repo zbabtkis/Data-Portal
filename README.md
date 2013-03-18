@@ -87,7 +87,7 @@ the value of this reference to a different content type, the header will
 be set after the callback has completed.
 
 The parameter `$method` can be used to determine whether the request is 
-coming from an XHR or an html object. This can be useful when you are dealing with elements like ```audio```, ```<object>``` or ```<img>``` to differentiate between needing to serve out the actual resource, or an element
+coming from an XHR or an html object. This can be useful when you are dealing with elements like ```<audio>```, ```<object>``` or ```<img>``` to differentiate between needing to serve out the actual resource, or an element
 that links to the resource.
 
 I'm using the "theme('table', $header, $rows)" Drupal function to simplify 
