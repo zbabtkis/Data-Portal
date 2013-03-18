@@ -54,7 +54,7 @@ But we still haven't provided any instructions for how to process the data! Let'
  * Callback from myModule_data_type_handler().
  * Renders data file as a table.
  */
-function snow_data_format_data($file, $method, &$header) {
+function myModule_format_data($file, $method, &$header) {
   // Header is set after the callback has completed.
  	//$header = "Content-Type: plain/text";
  	$row_count = 0;
