@@ -44,7 +44,7 @@
 	color: black;
 }
 #cec-data-wrapper {
-	width: 58%;
+	width: 52%;
 }
 #cec-data-wrapper pre {
 	height: 600px;
@@ -54,13 +54,13 @@
 .cec-button {
 	float: right;
 	position: relative;
-  padding: 0 !important;
-  margin-left: 5px;
-  cursor: pointer;
-  overflow: visible; 
-  width:32px;
-  height: 32px;
-  display: inline-block;
+  	padding: 0 !important;
+  	margin-left: 5px;
+  	cursor: pointer;
+  	overflow: visible; 
+  	width:32px;
+  	height: 32px;
+  	display: inline-block;
 }
 #cec-data-selector,#cec-data-wrapper {
 	display: inline-block;

@@ -54,15 +54,14 @@ function data_portal_menu() {
  * Config form for Data Portal settings.
  */
 function data_portal_config() {
-	global $base_path;
 	// Filesystem path that the module crawls -- set by user or default to '/'.
 	$fs_path = variable_get('data_portal_fs_path', '/');
 	// Path for data portal to be rendered on. Defaults to '/data/portal'.
 	$page_path = variable_get('data_portal_page_path', '/data/portal');
 	// Gets time that the db file was last updated. Helps determine whether data crawl has finished.
-	$ft = filemtime($base_path . '/' . drupal_get_path('module', 'data_portal') . '/db/dir_db.csv');
-	$form = array(); // Holds form for rendering by drupal_get_form.
-
+	$ft = 0;
+	$disabled = FALSE;
+	$ft = filemtime(drupal_get_path('module', 'data_portal') . '/db/dir_db.csv');
 	if(time() - $ft >= 60) { //  If file was last updated more than 1 minute ago, datacrawl has completed.
 		drupal_set_message('Filesystem crawl complete. You can now run a database update!');
 		$disabled = FALSE;
@@ -70,6 +69,8 @@ function data_portal_config() {
 		drupal_set_message('Filesystem crawl still running. You can run the database update when crawling is complete');
 		$disabled = TRUE;
 	}
+	$form = array(); // Holds form for rendering by drupal_get_form.
+
 	// Filesystem path to crawl.
 	$form['data_portal_fs_path'] = array(
 		'#type' => 'textfield',
@@ -81,7 +82,7 @@ function data_portal_config() {
 	$form['run_cec_data_up'] = array(
 		'#type' => 'submit',
 		'#value' => 'Run Data Update',
-		'#submit' => array('biogoeg_portal_db_up'),
+		'#submit' => array('data_portal_db_up'),
 		'#disabled' => $disabled);
 	$form['recrawl'] = array(
 		'#type' => 'submit',
@@ -97,22 +98,19 @@ function data_portal_run_recrawl() {
 	$fs_path = variable_get('data_portal_fs_path', '/');
 	$module = drupal_get_path('module', 'data_portal');
 	// Save currend working directory to return to once find has been executed.
-	$site_root = exec('pwd');
+	$site_root = getcwd();
 	// Change directory to data dir.
 	chdir($fs_path);
 	// Find all files in data path (set in Data Portal Admin settings).
 	exec("find . > $site_root/$module/db/dir_db.csv &");
 	chdir($site_root);
-
-	drupal_set_message("Now crawling for data...");
 }
 
-function biogoeg_portal_db_up() {
-	background_process_start('data_portal_run_db_up');
+function data_portal_db_up() {
+	background_process_start('data_portal_db_up_process');
 }
 
-function data_portal_run_db_up() {
-	ini_set('memory_limit', '512M');
+function data_portal_db_up_process() {
 	$f = fopen(drupal_get_path('module', 'data_portal') . '/db/dir_db.csv', 'r');
 	db_delete('data_portal_data')->execute();
 	// Create new filesystem.
@@ -250,7 +248,7 @@ function data_portal_get_data($id, $method) {
 			->fetchAssoc();
 		// Root path to user defined data folder.
 		$fs_path = variable_get('data_portal_fs_path', '/');
-		$request['path'] = $fs_path . '/' . $request['path'];
+		$request['path'] = $fs_path . $request['path'];
 		foreach($callbacks as $callback) {
 			// Does this this callback handle the file extension?
 			if(in_array($request['ext'], $callback['ext'])) {
@@ -267,8 +265,8 @@ function data_portal_get_data($id, $method) {
 }
 
 function data_portal_page_gen() {
-	global $base_path;
-	$module_path = $base_path . '/' . drupal_get_path('module', 'data_portal') . '/';
+	global $base_url;
+	$module_path = $base_url . '/' . drupal_get_path('module', 'data_portal') . '/';
 	// Select biogeog data portal db containing directory heirarchy.
 	$query = db_select('data_portal_data','d');
 	// Ged file id, file's parent id and title of the file.

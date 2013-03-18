@@ -1,0 +1,42 @@
+<?php
+/**
+ * @file
+ * Provides .dat file parser for Snow group.
+ */
+
+/**
+ * Implements hook_data_type_handler().
+ */
+function snow_data_data_type_handler() {
+	$items = array();
+	$items['snow_tabled_data'] = array(
+		'callback' => 'snow_data_format_data',
+		'title' => 'Snow Data',
+		'ext' => array(
+			'dat'
+		)
+	);
+	return $items;
+}
+function snow_data_format_data($file, $method, &$header) {
+	// Header is set after the callback has completed.
+ 	//$header = "Content-Type: plain/text";
+ 	$row_count = 0;
+ 	$file = fopen($file['path'], "r");
+ 	// Loop through csv lines to get header cols and rows.
+ 	while(($row = fgetcsv($file, 4000, ',')) !== FALSE) {
+ 	  if($row_count === 1) {
+ 	    $head = $row;
+ 	  } elseif($row_count > 2) {
+ 	    $rows[] = $row;
+ 	  }
+    $row_count++;
+ 	}
+ 	// Render data as table.
+ 	$table = theme('table', array(
+ 	  'header' => $head,
+ 	  'rows' => $rows,
+ 	  'attributes' => array('class' => array($file['title']))
+ 	));
+ 	return $table;
+}

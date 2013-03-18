@@ -1,0 +1,5 @@
+name = Data Portal - Snow Data
+description = Provides .dat file parser for Snow Group at UCSB.
+core = 7.x
+version = 7.x-1.0
+package = data_portal
