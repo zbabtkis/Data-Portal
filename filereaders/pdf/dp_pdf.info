@@ -1,0 +1,7 @@
+name = Data Portal - PDF Viewer
+description = Allows inline viewing of PDF files in Data Portal.
+package = Data Portal
+version = 7.x-1.0
+core = 7.x
+
+dependencies[] = data_portal

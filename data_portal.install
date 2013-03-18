@@ -7,8 +7,8 @@
 /**
  * Implements hook_schema().
  */
-function biogeog_portal_schema() {
-	$schema['biogeog_portal_data'] = array(
+function data_portal_schema() {
+	$schema['data_portal_data'] = array(
 		'fields' => array(
 			'id' => array(
 				'type' => 'int',
@@ -36,6 +36,12 @@ function biogeog_portal_schema() {
 				'length' => 128,
 				'not null' => TRUE,
 				'default' => '',
+			),
+			'ext' => array(
+				'type' => 'varchar',
+				'length' => 12,
+				'not null' => TRUE,
+				'default' => 'directory'
 			),
 		),
 		'primary_key' => array('id'),

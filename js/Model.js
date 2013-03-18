@@ -17,23 +17,17 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
 /** 1) File - Loads file when non-directory is clicked in view. */
 	var File = Backbone.Model.extend({
 		// Load as plain text.
-		loadText: function(id) {
+		load: function(id) {
 			var that = this;
-			var url = '/' + Drupal.settings.menu + '/get-text/' + that.get('id');
-			console.log(url);
+			var url = '/' + Drupal.settings.menu + '/get-data/' + that.get('id') + '/ajax';
 			$.ajax({
 				'url': url,
-				'dataType': 'text',
+				'dataType': 'html',
 				'success': function (data) {
 					that.set('text', data);
 				}
 			});
 		},
-		// For loading images.
-		loadImage: function() {
-			// Set path for image src.
-			this.set({'path': '/' + Drupal.settings.menu + '/get-image/' + this.get('id')});
-		}
 	});
 /** 2) DataModel - Directory listing model. */
 	var DataModel = Backbone.Model.extend({
@@ -82,24 +76,7 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
 			loadFile: function(id, title, type) {
 				this.file.set({'file': title, 'type': type, 'id': id});
 				// Define filetype handlers.
-				switch(type) {
-					case 'gtif':
-						this.file.loadImage();
-						break;
-					case 'tif':
-						this.file.loagImage();
-						break;
-					case 'jpeg':
-						this.file.loadImage();
-						break;
-					case 'aux':
-						this.file.loadText();
-						break;
-					case 'rar':
-						this.file.loadAttachment();
-					default:
-						this.file.loadText();
-				}
+				this.file.load();
 			},
 			listen: function() {
 				// Directory click handler.

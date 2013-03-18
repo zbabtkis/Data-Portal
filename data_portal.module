@@ -9,7 +9,7 @@ include 'inc/filesystem.inc';
 /**
  * Implements hook_menu().
  */
-function biogeog_portal_menu() {
+function data_portal_menu() {
 	$items = array();
 
 	// @TODO find a way to deal with url arguments so that Drupal can still
@@ -23,7 +23,7 @@ function biogeog_portal_menu() {
 	$items[$page_path] = array(
 		'title' => 'Data Portal',
 		'description' => t('Web portal data collection'),
-		'page callback' => 'biogeog_portal_page_gen',
+		'page callback' => 'data_portal_page_gen',
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
 	// Module configuration menu.
@@ -31,28 +31,21 @@ function biogeog_portal_menu() {
 		'title' => 'Data Portal Settings',
 		'description' => t('Configuration for the data portal module'),
 		'page callback' => 'drupal_get_form',
-		'page arguments' => array('biogeog_portal_config'),
+		'page arguments' => array('data_portal_config'),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_NORMAL_ITEM);
 	// XHR interface for requesting directory listing.
 	$items[$page_path . '/update/%'] = array(
 		'title' => 'Data Portal Update',
-		'page callback' => 'biogeog_portal_ajax_page',
+		'page callback' => 'data_portal_ajax_page',
 		'page arguments' => array(3),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_CALLBACK);
-	// XHR interface for requesting image.
-	$items[$page_path . '/get-image/%'] = array(
+	// XHR interface for requesting data.
+	$items[$page_path . '/get-data/%/%'] = array(
 		'title' => 'Data Portal Get Image',
-		'page callback' => 'biogeog_portal_get_image',
-		'page arguments' => array(3),
-		'access arguments' => array('access data portal'),
-	  'type' => MENU_CALLBACK);
-	// XHR interface for requesting plain text.
-	$items[$page_path . '/get-text/%'] = array(
-		'title' => 'Data Portal Get Image',
-		'page callback' => 'biogeog_portal_get_text',
-		'page arguments' => array(3),
+		'page callback' => 'data_portal_get_data',
+		'page arguments' => array(3, 4),
 		'access arguments' => array('access data portal'),
 	  'type' => MENU_CALLBACK);
 	return($items);
@@ -60,13 +53,14 @@ function biogeog_portal_menu() {
 /**
  * Config form for Data Portal settings.
  */
-function biogeog_portal_config() {
+function data_portal_config() {
+	global $base_path;
 	// Filesystem path that the module crawls -- set by user or default to '/'.
 	$fs_path = variable_get('data_portal_fs_path', '/');
 	// Path for data portal to be rendered on. Defaults to '/data/portal'.
 	$page_path = variable_get('data_portal_page_path', '/data/portal');
 	// Gets time that the db file was last updated. Helps determine whether data crawl has finished.
-	$ft = filemtime($_SERVER['DOCUMENT_ROOT'] . '/' . drupal_get_path('module', 'biogeog_portal') . '/db/dir_db.csv');
+	$ft = filemtime($base_path . '/' . drupal_get_path('module', 'data_portal') . '/db/dir_db.csv');
 	$form = array(); // Holds form for rendering by drupal_get_form.
 
 	if(time() - $ft >= 60) { //  If file was last updated more than 1 minute ago, datacrawl has completed.
@@ -92,16 +86,16 @@ function biogeog_portal_config() {
 	$form['recrawl'] = array(
 		'#type' => 'submit',
 		'#value' => 'Recrawl',
-		'#submit' => array('biogeog_portal_run_recrawl'));
+		'#submit' => array('data_portal_run_recrawl'));
 
 	// Saves form input and renders form.
 	return(system_settings_form($form));
 }
 
-function biogeog_portal_run_recrawl() {
+function data_portal_run_recrawl() {
 	// Data path to crawl.
 	$fs_path = variable_get('data_portal_fs_path', '/');
-	$module = drupal_get_path('module', 'biogeog_portal');
+	$module = drupal_get_path('module', 'data_portal');
 	// Save currend working directory to return to once find has been executed.
 	$site_root = exec('pwd');
 	// Change directory to data dir.
@@ -114,13 +108,13 @@ function biogeog_portal_run_recrawl() {
 }
 
 function biogoeg_portal_db_up() {
-	background_process_start('biogeog_portal_run_db_up');
+	background_process_start('data_portal_run_db_up');
 }
 
-function biogeog_portal_run_db_up() {
+function data_portal_run_db_up() {
 	ini_set('memory_limit', '512M');
-	$f = fopen(drupal_get_path('module', 'biogeog_portal') . '/db/dir_db.csv', 'r');
-	db_delete('biogeog_portal_data')->execute();
+	$f = fopen(drupal_get_path('module', 'data_portal') . '/db/dir_db.csv', 'r');
+	db_delete('data_portal_data')->execute();
 	// Create new filesystem.
 	$fs = new FS();
 	// Gets each file and directory in the current path split by '/'.
@@ -136,8 +130,8 @@ function biogeog_portal_run_db_up() {
 	}
 }
 
-function biogeog_portal_pull_dirs($dir_id, $find_col) {
-	$query = db_select('biogeog_portal_data','d');
+function data_portal_pull_dirs($dir_id, $find_col) {
+	$query = db_select('data_portal_data','d');
 	// Ged file id, file's parent id and title of the file.
 	$query->fields('d',array('id','pid','ppid','title','path'))
 	// On first view, we will show directories starting at level 4.
@@ -146,9 +140,9 @@ function biogeog_portal_pull_dirs($dir_id, $find_col) {
 	return $results;
 }
 
-function biogeog_portal_ajax_page($dir_id) {
+function data_portal_ajax_page($dir_id) {
 	if(isset($dir_id)) {
-		$results = biogeog_portal_pull_dirs($dir_id, 'pid');
+		$results = data_portal_pull_dirs($dir_id, 'pid');
 		$data = array();
 		while($record = $results->fetchAssoc()) {
 			$fileType = preg_match('/^.*\.(.*?)$/i', $record['title'], $ft);
@@ -163,7 +157,7 @@ function biogeog_portal_ajax_page($dir_id) {
 		    $data['ppid'] = $record['ppid'];
 		}
 
-		$pathResult = biogeog_portal_pull_dirs($dir_id, 'id');
+		$pathResult = data_portal_pull_dirs($dir_id, 'id');
 
 		while($r = $pathResult->fetchAssoc()) {
 			$data['path'] = explode('/',$r['path']);
@@ -176,49 +170,107 @@ function biogeog_portal_ajax_page($dir_id) {
 	}
 }
 
-function biogeog_portal_get_image($id) {
-	if(isset($id)) {
-		$query = db_select('biogeog_portal_data','d');
-		// Ged file id, file's parent id and title of the file.
-		$query->fields('d',array('id','path','title'))
-		// On first view, we will show directories starting at level 4.
-			  ->condition('id',$id,'=');
-		$results = $query->execute();
-
-		$data = array();
-		while($record = $results->fetchAssoc()) {
-			header('Content-Disposition: application; filename="'.$record['title'].'"');
-		    print(readfile($record['path']));
-		}
-	} else {
-		print("You haven't requested a directory id");
+function data_portal_get_image($file, $method, &$header) {
+	switch($method) {
+		case 'ajax':
+			$header = "";
+			$image = theme(
+				'image',
+				array(
+					'path' => '/data/portal/get-data/' . $file['id'] . '/resource',
+					'attributes' => array(
+						'class' =>  'file-' . $file['ext'] . ' file-' . $file['id'],
+						'id' => $file['title'],
+					),
+					'title' => $file['title'],
+				)
+			);
+			return $image;
+		case 'resource':
+			$file = file_get_contents($file['path']);
+			$header = 'Content-Disposition: application; filename="'.$file['title'].'"';
+			return $file;
+		default:
+			return "Method not defined.";
 	}
 }
 
-function biogeog_portal_get_text($id) {
-	if(isset($id)) {
-		$query = db_select('biogeog_portal_data','d');
-		// Ged file id, file's parent id and title of the file.
-		$query->fields('d',array('id','path','title'))
-		// On first view, we will show directories starting at level 4.
-			  ->condition('id',$id,'=');
-		$results = $query->execute();
+function data_portal_get_text($file, $method, &$header) {
+	$header = "Content-Type: plain/text";
+	return file_get_contents($file['path']);
+}
 
+function data_portal_data_type_handler() {
+	$items = array();
+	$items['plain_txt'] = array(
+		'callback' => 'data_portal_get_text',
+		'title' => 'Text',
+		'ext' => array(
+			'txt',
+		),
+	);
+	$items['image'] = array(
+		'callback' => 'data_portal_get_image',
+		'title' => 'Image',
+		'ext' => array(
+			'jpg',
+			'jpeg',
+			'png',
+			'gif',
+			'tiff',
+			'tiff',
+			'gtif',
+		),
+	);
+	$items['default'] = array(
+		'callback' => 'data_portal_get_text',
+		'title' => 'Text',
+		'ext' => array(),
+	);
+	return $items;
+}
+
+function data_portal_get_data($id, $method) {
+	if(isset($id)) {
+		// Will hold header for rendering file.
+		$header;
+		// Data to render;
+		$rendered_file;
+		// File hasn't been handled by callback yet.
+		$handled = FALSE;
+		// Invoke module hooks.
+		$callbacks = module_invoke_all('data_type_handler');
+		$request = db_select('data_portal_data','d')
+			// Ged file id, file's parent id and title of the file.
+			->fields('d',array('id','path','title','ext'))
+			// On first view, we will show directories starting at level 4.
+			->condition('id',$id,'=')
+			->range(0,1)
+			->execute()
+			->fetchAssoc();
+		// Root path to user defined data folder.
 		$fs_path = variable_get('data_portal_fs_path', '/');
-
-		$data = array();
-		while($record = $results->fetchAssoc()) {
-		    print(readfile($fs_path . '/' . $record['path']));
+		$request['path'] = $fs_path . '/' . $request['path'];
+		foreach($callbacks as $callback) {
+			// Does this this callback handle the file extension?
+			if(in_array($request['ext'], $callback['ext'])) {
+				$rendered_file = call_user_func_array($callback['callback'], array($request, $method, &$header));
+				$handled = TRUE;
+			}
 		}
-	} else {
-		print("You haven't requested a directory id");
+		if(!$handled) {
+			$rendered_file = call_user_func_array($callbacks['default']['callback'], array($request, $method, &$header));
+		}
+		header($header);
+		print($rendered_file);
 	}
 }
 
-function biogeog_portal_page_gen() {
-	$module_path = '/' . drupal_get_path('module', 'biogeog_portal') . '/';
+function data_portal_page_gen() {
+	global $base_path;
+	$module_path = $base_path . '/' . drupal_get_path('module', 'data_portal') . '/';
 	// Select biogeog data portal db containing directory heirarchy.
-	$query = db_select('biogeog_portal_data','d');
+	$query = db_select('data_portal_data','d');
 	// Ged file id, file's parent id and title of the file.
 	$query->fields('d',array('id','pid','title'))
 	// On first view, we will show directories starting at level 4.
@@ -251,20 +303,20 @@ function biogeog_portal_page_gen() {
     // Send current filesystem level objects to app Model.
 	drupal_add_js(array('cec-data' => $data, 'path' => $module_path, 'menu' => $_GET['q']), 'setting');
 	// Render web app using theme template
-	$page = theme('biogeog_portal_template');
+	$page = theme('data_portal_template');
 	return($page);
 }
-function biogeog_portal_permission() {
+function data_portal_permission() {
 	$items = array();
 	$items['access data portal'] = array(
 		'title' => 'Access Data Portal Content',
 		'description' => t('Access content from the biogeog data portal'));
 	return($items);
 }
-function biogeog_portal_theme() {
+function data_portal_theme() {
 	$themes = array(
-		'biogeog_portal_template' => array(
-			'template' => 'biogeog_portal_template',
+		'data_portal_template' => array(
+			'template' => 'data_portal_template',
 		),
 	);
 	return($themes);
