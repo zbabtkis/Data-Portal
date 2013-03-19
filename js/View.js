@@ -120,9 +120,11 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
     var PathDisplay = Backbone.View.extend({
       initialize: function() {
         this.$el = $('#data-path');
+        this.listenTo(cecPortal.Model, 'change:data', this.setDataPath);
       },
       setDataPath: function(path) {
-        this.$el.html(path.join('/'));
+        var path = cecPortal.Model.get('path').join('/');
+        this.$el.html(path);
       }
     });
     

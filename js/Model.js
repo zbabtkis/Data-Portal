@@ -34,6 +34,7 @@ var cecPortal = window.cecPortal || (window.cecPortal = {});
 			// Add listeners for directory changes and initialize model attributes vals.
 			initialize: function() {
 				this.displayPath = [''];
+				// Manages requests for file data
 				this.file = new File();
 				this.on('change:id', this.changeDir);
 				_.bindAll(this);
